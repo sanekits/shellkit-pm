@@ -1,0 +1,2 @@
+# List of paths in .local/bin/{Kitname}/ which get symlinked to
+# .local/bin on setup.  This also provides --help support specs
