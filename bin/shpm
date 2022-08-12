@@ -1,0 +1,45 @@
+#!/bin/bash
+# shpm : Main command for shellkit-pm
+
+scriptName="$(command readlink -f $0)"
+scriptDir=$(command dirname -- "${scriptName}")
+
+die() {
+    builtin echo "ERROR: $*" >&2
+    builtin exit 1
+}
+
+stub() {
+   builtin echo "  <<< STUB[$*] >>> " >&2
+}
+
+unimplemented() {
+    echo "Unimplemented feature: $*" >&2
+    exit 1
+}
+
+parseArgs() {
+    while [[ -n $1 ]]; do
+        case $1 in
+            install)
+                unimplemented "$*"
+                ;;
+            uninstall)
+                unimplemented "$*"
+                ;;
+            update)
+                unimplemented "$*"
+                ;;
+            *)
+                die "Unknown argument: $1"
+                ;;
+        esac
+        shift
+    done
+}
+
+main() {
+    builtin echo "args:[$*]"
+}
+
+[[ -z ${sourceMe} ]] && main "$@"
