@@ -6,7 +6,7 @@ ShellkitPmVersion=0.1.0
 
 canonpath() {
     type -t realpath.sh &>/dev/null && {
-        realpath.sh "$@"
+        realpath.sh -f "$@"
         return
     }
     # Ok for rough work only.  Prefer realpath.sh if it's on the path.
