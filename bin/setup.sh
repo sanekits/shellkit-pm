@@ -2,8 +2,14 @@
 # setup.sh
 
 canonpath() {
+    type -t realpath.sh &>/dev/null && {
+        realpath.sh "$@"
+        return
+    }
+    # Ok for rough work only.  Prefer realpath.sh if it's on the path.
     ( cd -L -- "$(dirname -- $0)"; echo "$(pwd -P)/$(basename -- $0)" )
 }
+
 
 stub() {
    builtin echo "  <<< STUB[$*] >>> " >&2

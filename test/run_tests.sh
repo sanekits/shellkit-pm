@@ -1,9 +1,14 @@
 #!/bin/bash
 # run_tests.sh  Runs all test/*/run_test.sh scripts
 
+
 canonpath() {
-    # Like "readlink -f", but portable
-    ( cd -L -- "$(command dirname -- ${1})"; echo "$(command pwd -P)/$(command basename -- ${1})" )
+    type -t realpath.sh &>/dev/null && {
+        realpath.sh "$@"
+        return
+    }
+    # Ok for rough work only.  Prefer realpath.sh if it's on the path.
+    ( cd -L -- "$(dirname -- $0)"; echo "$(pwd -P)/$(basename -- $0)" )
 }
 
 scriptName=$(canonpath $0)

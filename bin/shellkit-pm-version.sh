@@ -5,9 +5,14 @@
 ShellkitPmVersion=0.1.0
 
 canonpath() {
-    # Like "readlink -f", but portable
-    ( cd -L -- "$(command dirname -- ${1})"; echo "$(command pwd -P)/$(command basename -- ${1})" )
+    type -t realpath.sh &>/dev/null && {
+        realpath.sh "$@"
+        return
+    }
+    # Ok for rough work only.  Prefer realpath.sh if it's on the path.
+    ( cd -L -- "$(dirname -- $0)"; echo "$(pwd -P)/$(basename -- $0)" )
 }
+
 
 Script=$(canonpath "$0")
 Scriptdir=$(dirname -- "$Script")
