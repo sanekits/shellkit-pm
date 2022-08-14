@@ -19,5 +19,5 @@ Scriptdir=$(dirname -- "$Script")
 
 
 if [ -z "$sourceMe" ]; then
-    printf "%s\t%s\n" ${Scriptdir}/gitsmart ${ShellkitPmVersion}
+    printf "%s\t%s\n" ${Scriptdir}/shellkit-pm ${ShellkitPmVersion}
 fi
