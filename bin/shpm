@@ -88,6 +88,13 @@ _query_package_property() {
     }
 }
 
+_detect_package() {
+    local pkgName="$1"
+    local detectCmd=$(_query_package_property "$pkgName" detect-command)
+    [[ -n ${detectCmd} ]] || return
+    ${detectCmd} 2>/dev/null
+}
+
 _print_package_status() {
     # When:
     #   $1 = package name
@@ -145,6 +152,20 @@ config-prop() {
     _query_package_property "$1" $2 || die "Error finding property $1:$2"
 }
 
+list() {
+    local cfgPath=$(_find_config)
+    [[ -n $cfgPath ]] || die 101
+    while read kitname _; do
+        local detect_result="$(_detect_package ${kitname})" 2>/dev/null
+        echo -n "${kitname} "
+        [[ -n $detect_result ]] && { echo "$detect_result"; } || { echo " --> not installed"; }
+        (
+            _query_package_property ${kitname} desc
+            _query_package_property ${kitname} canon-source
+        ) | command sed 's/^/   /'
+    done < <( command grep -Eo '^[-_a-z0-9]+\s' ${cfgPath} | command uniq ; )
+}
+
 parseArgs() {
     while [[ -n $1 ]]; do
         case $1 in
@@ -167,7 +188,7 @@ parseArgs() {
                 exit
                 ;;
             list)
-                unimplemented "$*"
+                list "$@"
                 ;;
             config)
                 shift

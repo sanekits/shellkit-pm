@@ -9,6 +9,10 @@
 #   desc -> Short description of kit
 #   detect-command -> Commandline used to detect version currently installed
 
+shellkit-pm canon-source "https://github.com/sanekits/shellkit-pm"
+shellkit-pm desc Package manager for shellkit-based tools
+shellkit-pm detect-command shellkit-pm-version.sh
+
 gitsmart canon-source https://github.com/sanekits/gitsmart
 gitsmart desc Helper utilities and definitions for working with git
 gitsmart detect-command gitsmart-version.sh
