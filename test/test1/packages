@@ -1,0 +1,18 @@
+# packages
+# schema 1.0.0  -- schema of the packages metadata, this is not the shellkit-pm version
+# [kitname] [record-type] [data...]
+# The packages metadata is a set of one-line records, each line provides a distinct
+# information field for a particular kit
+#
+# Record types:
+#   canon-source  -> Canonical source repo for kit in github (with no sub-uri)
+#   desc -> Short description of kit
+#   detect-command -> Commandline used to detect version currently installed
+
+gitsmart canon-source https://github.com/sanekits/gitsmart
+gitsmart desc Helper utilities and definitions for working with git
+gitsmart detect-command gitsmart-version.sh
+
+ps1-foo canon-source https://github.com/sanekits/ps1-foo
+ps1-foo desc Make bash prompt more helpful+attractive
+ps1-foo detect-command ps1-foo-version.sh

@@ -1,7 +1,16 @@
 #!/bin/bash
 # shpm : Main command for shellkit-pm
 
-scriptName="$(command readlink -f $0)"
+canonpath() {
+    type -t realpath.sh &>/dev/null && {
+        realpath.sh -f "$@"
+        return
+    }
+    # Ok for rough work only.  Prefer realpath.sh if it's on the path.
+    ( cd -L -- "$(dirname -- $0)"; echo "$(pwd -P)/$(basename -- $0)" )
+}
+
+scriptName="$(canonpath $0)"
 scriptDir=$(command dirname -- "${scriptName}")
 
 die() {
@@ -18,9 +27,126 @@ unimplemented() {
     exit 1
 }
 
+list() {
+    exit 1
+}
+
+_find_config() {
+    [[ -n ${SHELLKIT_META_DIR} ]] && {
+        [[ -f ${SHELLKIT_META_DIR}/packages ]] || die "Can't find 'packages' in \$SHELLKIT_META_DIR ($SHELLKIT_META_DIR)"
+        echo ${SHELLKIT_META_DIR}/packages
+        return
+    }
+    [[ -f ~/.config/shellkit-meta/packages ]] && {
+        echo "$(canonpath ~/.config/shellkit-meta/packages)"
+        return
+    }
+    [[ -f /test_dir/packages ]] && {
+        echo "/test_dir/packages"
+        return
+    }
+    echo "ERROR: Can't find packages metadata" >&2
+    set +x
+}
+
+_query_package_property() {
+    # ---  Case 1 ---
+    # When:
+    #  $1 = package name
+    #  $2 <not provided>
+    #
+    # Then:
+    #  - print 'ok' if any property exists for given package name
+    #  - return 0 if any property is defined, else non-zero
+    #  - print err on fail
+    #
+    # ---  Case 2 ---
+    # When:
+    #  $1 = package name
+    #  $2 = packages record-type
+    # Then:
+    #  - print value of given property from packages metadata
+    #  - return 0 if property was defined, else non-zero
+    #  - print err if package not valid
+    local cfgPath=$(_find_config)
+    local packageName="$1"
+    local recordType="$2"
+    [[ -n $2 ]] && {
+        read _ __ propertyValue < <(command grep -E "^${packageName}\s*${recordType}\s*" "${cfgPath}")
+        local res=$?
+        echo "${propertyValue}"
+        [[ $res -eq 0 ]]; return
+    } || {
+        # No record-type, so just test for package name validity:
+        [[ -n $1 ]] || die "No package-name \$1 passed to _query_package_property"
+        command grep -Eq "^${packageName}\s*" "${cfgPath}" &>/dev/null
+        [[ $? -eq  0 ]] || {
+            echo "ERROR: invalid package name \"${packageName}\": not defined in ${cfgPath}" >&2
+            false; return;
+        }
+        return
+    }
+}
+
+_print_package_status() {
+    # When:
+    #   $1 = package name
+    # Then:
+    #   print [pkg_name] [installed?] [version] // and return 0 if valid  package name
+    #   print err // and return 1 if not valid package name
+    local pkgName="$1"
+    _query_package_property "$pkgName" || return
+    echo -n "$pkgName "
+    local detectCmd=$(_query_package_property "$pkgName" detect-command)
+    [[ -n $detectCmd ]] || {
+        echo "ERROR: no detect-command property for ${pkgName} in config";
+        false; return;
+    }
+    (
+        ${detectCmd}
+    ) || { echo "   -> Failed detecting ${pkgName}, but this could be installed with \"shpm install ${pkgName}\"" >&2; false; }
+}
+
+status() {
+    # Print the status of given package(s).  If any package fails,
+    # result is non-zero.  Format is:
+    #  [index] [package-name] [package-status]
+    #  ...or...
+    #  [index] ERROR <package-undefined msg>
+    [[ $# == 0 ]] && die "No package name(s) provided to status command"
+    local result=0
+    local index=0
+    for pkg_name; do
+        echo -n "$(( index++ )) "
+        _print_package_status $pkg_name 2>&1  | tr '\n' ' '
+        [[ ${PIPESTATUS[0]} -eq 0 ]] || result=1
+        echo
+    done
+    [[ $result -eq  0 ]]
+}
+
+config() {
+    local cfgPath=$(_find_config)
+    [[ -n $cfgPath ]] || die 101
+    echo "# Config-found: ${cfgPath}"
+    echo "# Content of packages metadata follows:"
+    echo "---------------------------------------"
+    cat "${cfgPath}"
+}
+
+config-prop() {
+    local cfgPath=$(_find_config)
+    [[ -n $cfgPath ]] || die 101
+    _query_package_property "$1" $2 || die "Error finding property $1:$2"
+}
+
 parseArgs() {
     while [[ -n $1 ]]; do
         case $1 in
+            --help)
+                shellkit-pm-help
+                exit 1
+                ;;
             install)
                 unimplemented "$*"
                 ;;
@@ -29,6 +155,24 @@ parseArgs() {
                 ;;
             update)
                 unimplemented "$*"
+                ;;
+            status)
+                shift
+                status "$@"
+                exit
+                ;;
+            list)
+                unimplemented "$*"
+                ;;
+            config)
+                shift
+                config "$@"
+                exit
+                ;;
+            config-prop)
+                shift
+                config-prop "$@"
+                exit
                 ;;
             *)
                 die "Unknown argument: $1"
@@ -39,7 +183,8 @@ parseArgs() {
 }
 
 main() {
-    builtin echo "args:[$*]"
+    parseArgs "$@"
 }
 
 [[ -z ${sourceMe} ]] && main "$@"
+
