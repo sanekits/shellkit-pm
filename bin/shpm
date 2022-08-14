@@ -10,13 +10,15 @@ canonpath() {
     ( cd -L -- "$(dirname -- $0)"; echo "$(pwd -P)/$(basename -- $0)" )
 }
 
-scriptName="$(canonpath $0)"
-scriptDir=$(command dirname -- "${scriptName}")
+[[ -z ${scriptName} ]] && scriptName="$(canonpath $0)"
+[[ -z ${scriptDir} ]] && scriptDir=$(command dirname -- "${scriptName}")
 
 die() {
     builtin echo "ERROR: $*" >&2
     builtin exit 1
 }
+
+
 
 stub() {
    builtin echo "  <<< STUB[$*] >>> " >&2
@@ -27,9 +29,6 @@ unimplemented() {
     exit 1
 }
 
-list() {
-    exit 1
-}
 
 _find_config() {
     [[ -n ${SHELLKIT_META_DIR} ]] && {
@@ -37,16 +36,15 @@ _find_config() {
         echo ${SHELLKIT_META_DIR}/packages
         return
     }
-    [[ -f ~/.config/shellkit-meta/packages ]] && {
-        echo "$(canonpath ~/.config/shellkit-meta/packages)"
-        return
-    }
-    [[ -f /test_dir/packages ]] && {
-        echo "/test_dir/packages"
-        return
-    }
-    echo "ERROR: Can't find packages metadata" >&2
-    set +x
+    local searchList=("~/.config/shellkit-meta/packages" "/test_dir/packages")
+    for path in "${searchList[@]}"; do
+        path=$(eval "echo $path")
+        [[ -f ${path} ]] && {
+            echo "$(canonpath ${path})"
+            return
+        }
+    done
+    echo "ERROR: Can't find metadata in: ${searchList[@]}" >&2
 }
 
 _query_package_property() {
@@ -166,20 +164,29 @@ list() {
     done < <( command grep -Eo '^[-_a-z0-9]+\s' ${cfgPath} | command uniq ; )
 }
 
+install() {
+    ${scriptDir}/install-package.sh "$@"
+}
+
 parseArgs() {
     while [[ -n $1 ]]; do
         case $1 in
             --help)
-                shellkit-pm-help
+                shift
+                shellkit-pm-help "$@"
                 exit 1
                 ;;
             install)
-                unimplemented "$*"
+                shift
+                install "$@"
+                exit
                 ;;
             uninstall)
+                shift
                 unimplemented "$*"
                 ;;
             update)
+                shift
                 unimplemented "$*"
                 ;;
             status)
@@ -188,6 +195,7 @@ parseArgs() {
                 exit
                 ;;
             list)
+                shift
                 list "$@"
                 ;;
             config)
@@ -212,5 +220,9 @@ main() {
     parseArgs "$@"
 }
 
-[[ -z ${sourceMe} ]] && main "$@"
+[[ -z ${sourceMe} ]] && {
+    parseArgs "$@"
+    exit
+}
 
+true
