@@ -2,7 +2,7 @@
 
 # Running {Kitname}-version.sh is the correct way to
 # get the home install path for the tool
-ShellkitPmVersion=0.1.3
+ShellkitPmVersion=0.1.4
 
 canonpath() {
     type -t realpath.sh &>/dev/null && {

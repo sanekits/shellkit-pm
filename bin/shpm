@@ -92,7 +92,7 @@ _print_package_status() {
     # When:
     #   $1 = package name
     # Then:
-    #   print [pkg_name] [installed?] [version] // and return 0 if valid  package name
+    #   print [pkg_name] [installed?] [version]  // and return 0 if valid  package name
     #   print err // and return 1 if not valid package name
     local pkgName="$1"
     _query_package_property "$pkgName" || return
@@ -103,8 +103,13 @@ _print_package_status() {
         false; return;
     }
     (
-        ${detectCmd}
-    ) || { echo "   -> Failed detecting ${pkgName}, but this could be installed with \"shpm install ${pkgName}\"" >&2; false; }
+        ${detectCmd} | tr '\n' ' '
+        [[ ${PIPESTATUS[0]} -eq 0 ]]
+    ) || {
+        echo "   -> Failed detecting ${pkgName}, but this could be installed with \"shpm install ${pkgName}\"" >&2;
+        false;
+        return;
+    }
 }
 
 status() {
