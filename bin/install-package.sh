@@ -48,6 +48,11 @@ _get_base_url_from_canon_source() {
     echo "${canon_source}" | command grep -Eo 'http[s]?://[^/]+'
 }
 
+curl_opts() {
+    echo "-L"
+    [[ -n $https_proxy ]] && echo " -k"
+}
+
 _download_github_release() {
     # Download self-extracting setup script into tmpdir.  Create
     # a 'setup.sh' symlink and return the tmpdir path
@@ -59,7 +64,7 @@ _download_github_release() {
     local tmpdir=$(command mktemp -d)
     (
         cd ${tmpdir} || die "201.3"
-        command curl -L "${canon_source}/releases/${version}" > rawpage.html
+        command curl $(curl_opts) "${canon_source}/releases/${version}" > rawpage.html
         [[ $? -eq 0 ]] || {
             echo "Failed to retrieve raw html" >&2; false;
             return;
@@ -69,7 +74,7 @@ _download_github_release() {
         base_url=$( _get_base_url_from_canon_source "${canon_source}" )
         full_url="${base_url}${uri}"
         dest_file="${PWD}/${pkgName}-setup-${version}.sh"
-        command curl -L "$full_url" > "${dest_file}"
+        command curl $(curl_opts)  "$full_url" > "${dest_file}"
         [[ $? -eq 0 ]] || return $(die "Failed downloading $full_url")
         chmod +x "$dest_file"
         echo "$dest_file"
