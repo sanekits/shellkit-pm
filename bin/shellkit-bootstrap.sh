@@ -37,6 +37,11 @@ version_lt() {
     )
 }
 
+curl_opts() {
+    echo "-L"
+    [[ -n $https_proxy ]] && echo " -k"
+}
+
 main() {
     command curl --version &>/dev/null || die "Prerequisite 'curl' is not installed.  Use your package manager (e.g. apt-get or yum, etc) to resolve that."
 
@@ -46,12 +51,15 @@ main() {
     (
         cd $tmpDir || die "Can't cd to ${tmpDir}"
         setup_script=shellkit-pm-setup-${shellkitpm_version}.sh
-        command curl -L "$pm_download_url" > ${setup_script} || die "Failed downloading $pm_download_url"
+        set -x
+        command curl $(curl_opts) "$pm_download_url" > ${setup_script} || die "Failed downloading $pm_download_url"
         command grep -Eq 'using Makeself' ${setup_script} || die "Bad setup script content in ${setup_script}"
         echo "OK: $pm_download_url"
-        command curl -L "$meta_download_url" > packages || die "Failed downloading $meta_download_url"
+        command curl $(curl_opts) "$meta_download_url" > packages || die "Failed downloading $meta_download_url"
         command grep -Eq 'canon-source' packages || die "Bad packages content in $PWD/packages"
         echo "OK: $meta_download_url => ${PWD}/packages"
+
+        set +x
         curPmVersion=$(command shellkit-pm-version.sh 2>/dev/null | command awk '{print $2}')
         [[ -z $curPmVersion ]] && curPmVersion=0.0.0
         if version_lt "$shellkitpm_version" "$curPmVersion"; then
