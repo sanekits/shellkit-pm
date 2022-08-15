@@ -2,7 +2,7 @@
 # shellkit-bootstrap.sh:  starting from pure scratch, install current shellkit-meta + shellkit-pm
 #  Provides intro guidance on kit setup
 
-shellkitpm_version=0.2.3  # Initial bootstrap version.  You can always do `shpm install shellkit-pm` to update it
+shellkitpm_version=0.2.4  # Initial bootstrap version.  You can always do `shpm install shellkit-pm` to update it
 
 canonpath() {
     # Like "readlink -f", but portable
