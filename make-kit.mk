@@ -8,5 +8,8 @@
 #   by the user -- i.e. the files that get installed,
 #   or anything which generates those files.
 kit_depends := \
-    bin/hello-kit.rc \
-    bin/hello-kit.sh
+    bin/shpm \
+    bin/install-package.sh \
+	bin/setup.sh \
+	bin/shellkit-pm-help \
+	bin/shellkit-bootstrap.sh \
