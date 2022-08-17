@@ -2,7 +2,7 @@
 
 # Running shellkit-pm-version.sh is the correct way to
 # get the home install path for the tool
-KitVersion=0.1.0
+KitVersion=0.3.0
 
 canonpath() {
     # Like "readlink -f", but portable
