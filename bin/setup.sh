@@ -1,15 +1,9 @@
 #!/bin/bash
-# setup.sh
+# setup.sh for <kitname>
 
 canonpath() {
-    type -t realpath.sh &>/dev/null && {
-        realpath.sh -f "$@"
-        return
-    }
-    # Ok for rough work only.  Prefer realpath.sh if it's on the path.
     ( cd -L -- "$(dirname -- $0)"; echo "$(pwd -P)/$(basename -- $0)" )
 }
-
 
 stub() {
    builtin echo "  <<< STUB[$*] >>> " >&2
@@ -27,6 +21,11 @@ die() {
 main() {
     Script=${scriptName} main_base "$@"
     cd ${HOME}/.local/bin || die 208
+    # TODO: kit-specific steps can be added here
 }
 
-[[ -z ${sourceMe} ]] && main "$@"
+[[ -z ${sourceMe} ]] && {
+    main "$@"
+    exit
+}
+true

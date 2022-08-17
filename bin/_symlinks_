@@ -1,4 +1,4 @@
 # List of paths in .local/bin/{Kitname}/ which get symlinked to
-# .local/bin on setup.  This also provides --help support specs
-shpm #help Package manager for shellkit-based tools
-shellkit-pm-help #help Help for shpm (shellkit-pm)
+# .local/bin on setup
+# TODO: list your scripts which need to be on the PATH, one per line
+hello.sh

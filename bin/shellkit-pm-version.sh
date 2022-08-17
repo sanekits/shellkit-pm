@@ -1,23 +1,18 @@
 #!/bin/bash
 
-# Running {Kitname}-version.sh is the correct way to
+# Running shellkit-pm-version.sh is the correct way to
 # get the home install path for the tool
-ShellkitPmVersion=0.2.4
+KitVersion=0.1.0
 
 canonpath() {
-    type -t realpath.sh &>/dev/null && {
-        realpath.sh -f "$@"
-        return
-    }
-    # Ok for rough work only.  Prefer realpath.sh if it's on the path.
-    ( cd -L -- "$(dirname -- $0)"; echo "$(pwd -P)/$(basename -- $0)" )
+    # Like "readlink -f", but portable
+    ( cd -L -- "$(command dirname -- ${1})"; echo "$(command pwd -P)/$(command basename -- ${1})" )
 }
-
 
 Script=$(canonpath "$0")
 Scriptdir=$(dirname -- "$Script")
 
 
 if [ -z "$sourceMe" ]; then
-    printf "%s\t%s\n" ${Scriptdir}/shellkit-pm ${ShellkitPmVersion}
+    printf "%s\t%s\n" ${Scriptdir}/shellkit-pm $KitVersion
 fi
