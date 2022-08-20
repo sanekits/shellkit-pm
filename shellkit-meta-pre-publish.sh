@@ -27,10 +27,12 @@ stub() {
 }
 main() {
     [[ -d ../shellkit-meta ]] || die "../shellkit-meta/ dir not found"
+    [[ -d ${HOME}/downloads ]] || die main.1
     (
         builtin cd ../shellkit-meta
-        make pre-publish
-    )
+        make pre-publish || die main.0.1
+        command cp ./packages ${HOME}/downloads/ || die main.0.2
+    ) || die main.0
 }
 
 [[ -z ${sourceMe} ]] && {
