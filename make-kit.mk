@@ -14,11 +14,12 @@ kit_depends := \
 	bin/shellkit-pm-help \
 	bin/shellkit-bootstrap.sh \
 
+.PHONY:  shellkit-meta shellkit-meta-setup
 
 
-publish:
-	@# TODO: you can customize publication by adding steps here (before publish-common)
-	@# or after
+shellkit-meta: ../shellkit-meta/packages ../shellkit-meta/Makefile
+	./shellkit-meta-pre-publish.sh
+
+publish: pre-publish shellkit-meta ${HOME}/downloads
 	make publish-common
-	@# (After common publication)
 	@echo publish complete OK
