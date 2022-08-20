@@ -13,3 +13,8 @@ kit_depends := \
 	bin/setup.sh \
 	bin/shellkit-pm-help \
 	bin/shellkit-bootstrap.sh \
+
+
+
+publish: pre-publish
+	@echo publish complete OK
