@@ -30,9 +30,10 @@ main() {
     [[ -d ${HOME}/downloads ]] || die main.1
     (
         builtin cd ../shellkit-meta
-        make pre-publish || die main.0.1
+        command make pre-publish || die main.0.1
         command cp ./packages ${HOME}/downloads/ || die main.0.2
     ) || die main.0
+    command cp bin/shellkit-bootstrap.sh ${HOME}/downloads || die main.1
 }
 
 [[ -z ${sourceMe} ]] && {

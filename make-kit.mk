@@ -22,4 +22,5 @@ shellkit-meta: ../shellkit-meta/packages ../shellkit-meta/Makefile
 
 publish: pre-publish shellkit-meta ${HOME}/downloads
 	make publish-common
+	@echo MANUAL STEP:  ${HOME}/downloads/packages should be attached to release artifacts
 	@echo publish complete OK
