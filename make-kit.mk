@@ -16,5 +16,9 @@ kit_depends := \
 
 
 
-publish: pre-publish
+publish:
+	# TODO: you can customize publication by adding steps here (before publish-common)
+	# or after
+	make publish-common
+	# (After common publication)
 	@echo publish complete OK
