@@ -1,6 +1,8 @@
 # Dockerfile for shpm-test
 
-FROM shellkit-test-base
+# docker run --rm -it artprod.dev.bloomberg.com/build-base 
+
+FROM shellkit-test-base:latest
 
 RUN touch /.dockerenv
 
