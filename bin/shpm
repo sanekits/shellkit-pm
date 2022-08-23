@@ -169,14 +169,25 @@ install() {
 }
 
 parseArgs() {
+    [[ -z $1 ]] && {
+        shellkit-pm-help "${scriptName}"
+        exit
+    }
     while [[ -n $1 ]]; do
         case $1 in
             --help)
                 shift
-                shellkit-pm-help "$@"
-                exit 1
+                shellkit-pm-help "${scriptName}"
+                exit
+                ;;
+            --version)
+                #help Print version info for shellkit-pm
+                shift
+                shellkit-pm-version.sh "$@"
+                exit
                 ;;
             install)
+                #help Install [package [package...]]
                 shift
                 install "$@"
                 exit
@@ -190,11 +201,13 @@ parseArgs() {
                 unimplemented "$*"
                 ;;
             status)
+                #help Print status of [package [package...]]
                 shift
                 status "$@"
                 exit
                 ;;
             list)
+                #help List package catalog with installation status
                 shift
                 list "$@"
                 ;;
