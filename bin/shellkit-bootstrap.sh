@@ -5,7 +5,6 @@
 shellkitpm_version=0.3.8  # Initial bootstrap version.  You can always do `shpm install shellkit-pm` to update it
 
 canonpath() {
-    # Like "readlink -f", but portable
     ( cd -L -- "$(command dirname -- ${1})"; echo "$(command pwd -P)/$(command basename -- ${1})" )
 }
 
