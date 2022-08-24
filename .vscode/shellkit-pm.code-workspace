@@ -8,6 +8,7 @@
 		}
 	],
     "settings": {
+        "window.title": "Shellkit PM Maintenance",
         "workbench.colorCustomizations": {
             "terminal.ansiBlack": "#090300",
             "terminal.ansiBlue": "#01A0E4",
