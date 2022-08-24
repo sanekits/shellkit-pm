@@ -30,68 +30,6 @@ unimplemented() {
 }
 
 
-_find_config() {
-    [[ -n ${SHELLKIT_META_DIR} ]] && {
-        [[ -f ${SHELLKIT_META_DIR}/packages ]] || die "Can't find 'packages' in \$SHELLKIT_META_DIR ($SHELLKIT_META_DIR)"
-        echo ${SHELLKIT_META_DIR}/packages
-        return
-    }
-    local searchList=("~/.config/shellkit-meta/packages" "/test_dir/packages")
-    for path in "${searchList[@]}"; do
-        path=$(eval "echo $path")
-        [[ -f ${path} ]] && {
-            echo "$(canonpath ${path})"
-            return
-        }
-    done
-    echo "ERROR: Can't find metadata in: ${searchList[@]}" >&2
-}
-
-_query_package_property() {
-    # ---  Case 1 ---
-    # When:
-    #  $1 = package name
-    #  $2 <not provided>
-    #
-    # Then:
-    #  - print 'ok' if any property exists for given package name
-    #  - return 0 if any property is defined, else non-zero
-    #  - print err on fail
-    #
-    # ---  Case 2 ---
-    # When:
-    #  $1 = package name
-    #  $2 = packages record-type
-    # Then:
-    #  - print value of given property from packages metadata
-    #  - return 0 if property was defined, else non-zero
-    #  - print err if package not valid
-    local cfgPath=$(_find_config)
-    local packageName="$1"
-    local recordType="$2"
-    [[ -n $2 ]] && {
-        read _ __ propertyValue < <(command grep -E "^${packageName}\s*${recordType}\s*" "${cfgPath}")
-        local res=$?
-        echo "${propertyValue}"
-        [[ $res -eq 0 ]]; return
-    } || {
-        # No record-type, so just test for package name validity:
-        [[ -n $1 ]] || die "No package-name \$1 passed to _query_package_property"
-        command grep -Eq "^${packageName}\s*" "${cfgPath}" &>/dev/null
-        [[ $? -eq  0 ]] || {
-            echo "ERROR: invalid package name \"${packageName}\": not defined in ${cfgPath}" >&2
-            false; return;
-        }
-        return
-    }
-}
-
-_detect_package() {
-    local pkgName="$1"
-    local detectCmd=$(_query_package_property "$pkgName" detect-command)
-    [[ -n ${detectCmd} ]] || return
-    ${detectCmd} 2>/dev/null
-}
 
 _print_package_status() {
     # When:
@@ -100,9 +38,9 @@ _print_package_status() {
     #   print [pkg_name] [installed?] [version]  // and return 0 if valid  package name
     #   print err // and return 1 if not valid package name
     local pkgName="$1"
-    _query_package_property "$pkgName" || return
+    shellkit-query-package.sh "$pkgName" || return
     echo -n "$pkgName "
-    local detectCmd=$(_query_package_property "$pkgName" detect-command)
+    local detectCmd=$(shellkit-query-package.sh "$pkgName" detect-command)
     [[ -n $detectCmd ]] || {
         echo "ERROR: no detect-command property for ${pkgName} in config";
         false; return;
@@ -158,8 +96,8 @@ list() {
         echo -n "${kitname} "
         [[ -n $detect_result ]] && { echo "$detect_result"; } || { echo " --> not installed"; }
         (
-            _query_package_property ${kitname} desc
-            _query_package_property ${kitname} canon-source
+            shellkit-query-package.sh ${kitname} desc
+            shellkit-query-package.sh ${kitname} canon-source
         ) | command sed 's/^/   /'
     done < <( command grep -Eo '^[-_a-z0-9]+\s' ${cfgPath} | command uniq ; )
 }

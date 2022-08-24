@@ -1,0 +1,5 @@
+# test/test3/shellkit-meta TESTDATA packages
+# schema 1.0.0  -- schema of the packages metadata, this is not the shellkit-pm version
+
+gitsmart canon-source https://github.com/testsite/gitsmart
+gitsmart desc Test description for gitsmart

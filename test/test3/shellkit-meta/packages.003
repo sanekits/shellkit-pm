@@ -1,0 +1,6 @@
+# test/test3/shellkit-meta TESTDATA packages
+# schema 1.0.0  -- schema of the packages metadata, this is not the shellkit-pm version
+
+ps1-foo canon-source https://testsite.com/sanekits/ps1-foo
+ps1-foo desc Test description only
+ps1-foo detect-command ps1-foo-version.sh
