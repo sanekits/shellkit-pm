@@ -96,7 +96,7 @@ _resolve_metadata() {
     [[ -d $metaRoot ]] || die $_f.2
     local tmpRoot=$(command mktemp --tmpdir -d shpm-meta.XXXXXX)
     [[ -d $tmpRoot ]] || die $_f.3
-    local meta_file_list=$( command ls ${metaRoot}/packages ${metaRoot}/packages.???  | sort )
+    local meta_file_list=$( command ls ${metaRoot}/packages ${metaRoot}/packages.??? 2>/dev/null | sort )
     (
         # Populate tmpRoot:
         builtin cd $tmpRoot || die $_f.33
