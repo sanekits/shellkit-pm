@@ -53,7 +53,7 @@ scriptDir=$(command dirname -- "${scriptName}")
 scriptBase=$(basename ${scriptName})
 
 die() {
-    builtin echo "ERROR($(basename ${scriptName}): $*" >&2
+    builtin echo "ERROR(${scriptBase}): $*" >&2
     builtin exit 1
 }
 

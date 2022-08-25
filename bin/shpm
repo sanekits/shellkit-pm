@@ -38,9 +38,9 @@ _print_package_status() {
     #   print [pkg_name] [installed?] [version]  // and return 0 if valid  package name
     #   print err // and return 1 if not valid package name
     local pkgName="$1"
-    shellkit-query-package.sh "$pkgName" || return
+    _query_package "$pkgName" || return
     echo -n "$pkgName "
-    local detectCmd=$(shellkit-query-package.sh "$pkgName" detect-command)
+    local detectCmd=$(_query_package "${pkgName}.detect-command")
     [[ -n $detectCmd ]] || {
         echo "ERROR: no detect-command property for ${pkgName} in config";
         false; return;
@@ -73,7 +73,7 @@ status() {
     [[ $result -eq  0 ]]
 }
 
-_query_package_property() {
+_query_package() {
     ${scriptDir}/shellkit-query-package.sh "$@"
 }
 
@@ -88,21 +88,21 @@ config() {
 
 config-prop() {
     local _f=config-prop
-    _query_package_property "$@" || die "$_f.1"
+    _query_package "$@" || die "$_f.1"
 }
 
 list() {
-    local cfgPath=$(_find_config)
-    [[ -n $cfgPath ]] || die 101
+    #local cfgPath=$(_find_config)
+    #[[ -n $cfgPath ]] || die 101
     while read kitname _; do
         local detect_result="$(_detect_package ${kitname})" 2>/dev/null
         echo -n "${kitname} "
         [[ -n $detect_result ]] && { echo "$detect_result"; } || { echo " --> not installed"; }
         (
-            shellkit-query-package.sh ${kitname} desc
-            shellkit-query-package.sh ${kitname} canon-source
+            _query_package ${kitname}.desc ${kitname} canon-source
         ) | command sed 's/^/   /'
-    done < <( command grep -Eo '^[-_a-z0-9]+\s' ${cfgPath} | command uniq ; )
+    #done < <( command grep -Eo '^[-_a-z0-9]+\s' ${cfgPath} | command uniq ; )
+    done < <( _query_package --package-names )
 }
 
 install() {
