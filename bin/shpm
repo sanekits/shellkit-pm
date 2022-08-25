@@ -73,6 +73,10 @@ status() {
     [[ $result -eq  0 ]]
 }
 
+_query_package_property() {
+    ${scriptDir}/shellkit-query-package.sh "$@"
+}
+
 config() {
     local cfgPath=$(_find_config)
     [[ -n $cfgPath ]] || die 101
@@ -83,9 +87,8 @@ config() {
 }
 
 config-prop() {
-    local cfgPath=$(_find_config)
-    [[ -n $cfgPath ]] || die 101
-    _query_package_property "$1" $2 || die "Error finding property $1:$2"
+    local _f=config-prop
+    _query_package_property "$@" || die "$_f.1"
 }
 
 list() {
