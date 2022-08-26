@@ -16,6 +16,8 @@ kit_depends := \
 
 .PHONY:  shellkit-meta shellkit-meta-setup code
 
+apply_version_extra_files:= bin/shellkit-bootstrap.sh
+version_depends=${apply_version_extra_files}
 
 shellkit-meta: ../shellkit-meta/packages ../shellkit-meta/Makefile
 	./shellkit-meta-pre-publish.sh
@@ -24,5 +26,5 @@ publish: publish-common shellkit-meta ${HOME}/downloads push-tag
 	@echo "MANUAL STEP:  ~/downloads/packages and ~/downloads/shellkit-bootstrap.sh should be attached to release artifacts"
 	@echo publish complete OK
 
-code: 
+code:
 	code .vscode/shellkit-pm.code-workspace
