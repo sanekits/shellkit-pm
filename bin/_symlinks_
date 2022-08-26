@@ -1,5 +1,6 @@
 # List of paths in .local/bin/{Kitname}/ which get symlinked to
 # .local/bin on setup
-# TODO: list your scripts which need to be on the PATH, one per line
+
 shpm #help Shellkit package manager: install, list, maintain shellkit-based packages
 shellkit-query-package.sh #help@ $SHELLKIT_HELP_SYMBOL --help
+shellkit-pm-help.sh
