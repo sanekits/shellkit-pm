@@ -22,16 +22,17 @@ stub() {
 queryScript=$(canonpath ${scriptDir}/../../../bin/shellkit-query-package.sh)
 
 die() {
-    builtin echo "ERROR($(basename ${scriptName}): $*" >&2
+    builtin echo "ERROR($(basename ${scriptName})): $*" >&2
     builtin exit 1
 }
 
 main() {
+    local _f=$scriptName.main
     export SHELLKIT_META_DIR=${scriptDir}
     stub "meta: $(${queryScript} --meta | tr '\n' ',' )"
-
-    ${queryScript} --package-names || die
-    ${queryScript} ps1-foo.desc gitsmart || die
+    set -x
+    ${queryScript} --package-names || die $_f --package-names
+    ${queryScript} ps1-foo.desc gitsmart || die $_f qq
 }
 
 [[ -z ${sourceMe} ]] && {
