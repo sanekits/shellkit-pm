@@ -2,7 +2,7 @@
 # shellkit-bootstrap.sh:  starting from pure scratch, install current shellkit-meta + shellkit-pm
 #  Provides intro guidance on kit setup
 
-shellkitpm_version=0.4.0  # Initial bootstrap version.  You can always do `shpm install shellkit-pm` to update it
+shellkitpm_version=0.4.2  # Initial bootstrap version.  You can always do `shpm install shellkit-pm` to update it
 
 canonpath() {
     ( cd -L -- "$(command dirname -- ${1})"; echo "$(command pwd -P)/$(command basename -- ${1})" )
@@ -60,7 +60,11 @@ main() {
 
         set +x
         curPmVersion=$(command shellkit-pm-version.sh 2>/dev/null | command awk '{print $2}')
-        [[ -z $curPmVersion ]] && curPmVersion=0.0.0
+        [[ -z $curPmVersion ]] && {
+            # Elaborately build a version string that "make apply-version"
+            # won't replace:
+            curPmVersion=$( echo 0 .0 .0  | tr -d ' ')
+        }
         if version_lt "$shellkitpm_version" "$curPmVersion"; then
             builtin echo "Bootstrap version < currently installed version, skipping setup of shellkit-pm" >&2
         else
