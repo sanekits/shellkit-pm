@@ -69,7 +69,7 @@ _print_package_status() {
         echo "INSTALLED ${version}"
         true
     } || {
-        echo "not-installed";
+        echo "not-installed $(_query_property ${pkgName}.canon-source)";
         false
     }
 }
@@ -95,6 +95,11 @@ status() {
 
 _query_package() {
     ${scriptDir}/shellkit-query-package.sh "$@"
+}
+
+_query_property() {
+    _query_package "$@" | command awk '{print $2}'
+    [[ ${PIPESTATUS[0]} -eq 0 ]]
 }
 
 config() {
