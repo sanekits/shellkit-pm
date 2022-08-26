@@ -15,10 +15,19 @@ canonpath() {
 }
 scriptName="$(canonpath "$0")"
 scriptDir=$(command dirname -- "${scriptName}")
+scriptBase="$(basename ${scriptName})"
 
 stub() {
-   builtin echo "  <<< STUB[$*] >>> " >&2
+    # Print debug output to stderr.  Call like this:
+    #   stub ${FUNCNAME[0]}.$LINENO item item item
+    #
+    builtin echo -n "  <<< STUB" >&2
+    for arg in "$@"; do
+        echo -n "[${arg}] " >&2
+    done
+    echo " >>> " >&2
 }
+
 queryScript=$(canonpath ${scriptDir}/../../../bin/shellkit-query-package.sh)
 
 die() {
@@ -29,7 +38,9 @@ die() {
 main() {
     local _f=$scriptName.main
     export SHELLKIT_META_DIR=${scriptDir}
-    stub "meta: $(${queryScript} --meta | tr '\n' ',' )"
+    stub "${FUNCNAME[0]}.${LINENO}" "$@" "${scriptBase} startup"
+
+
     set -x
     ${queryScript} --package-names || die $_f --package-names
     ${queryScript} ps1-foo.desc gitsmart || die $_f qq
