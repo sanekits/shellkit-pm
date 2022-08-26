@@ -174,27 +174,48 @@ _query_package_property() {
     IFS="." read packageName recordType <<< "$1"
     [[ -n ${recordType} ]] && {
         builtin echo -n "${packageName}.${recordType} "
-        command cat "${packageName}/${recordType}"
+        command cat "${packageName}/${recordType}" 2>/dev/null || {
+            return $(die "$1 not defined")
+        }
         return
     } || {
         # No record-type, so just test for package name validity:
-        [[ -n ${packageName} ]] || die "No package-name passed to $_f"
-        [[ -d ${packageName} ]] || die "Unknown package: ${packageName}"
+        [[ -n ${packageName} ]] || return $(die "No package-name passed to $_f")
+        [[ -d ${packageName} ]] || return $(die "Unknown package: ${packageName}")
         # Print all properties:
         for file in ${packageName}/*; do
             builtin echo -n "$file " \
                 | command tr '/' '.'
-            command cat $file
+            command cat $file 2>/dev/null
         done
         return
     }
 }
 
+_get_property_value() {
+    local key val
+    read key val <<< $(_query_package_property "$1")
+    echo "$val"
+}
+
 _detect_package() {
     local pkgName="$1"
-    local detectCmd=$(_query_package_property "$pkgName" detect-command)
+    local detectCmd=$(_get_property_value "${pkgName}.detect-command")
     [[ -n ${detectCmd} ]] || return
     ${detectCmd} 2>/dev/null
+    res=$?
+    [[ $res -eq 0 ]]
+}
+
+
+_detect_packages() {
+    for pkg_name in "$@"; do
+        _detect_package "$pkg_name"
+    done
+}
+
+detect_packages() {
+    _run_query_function _detect_packages "$@"
 }
 
 _run_query_function() {
@@ -257,6 +278,11 @@ main() {
             --package-names)
                 shift
                 _get_package_names "$@"
+                exit
+                ;;
+            --detect)
+                shift
+                detect_packages "$@"
                 exit
                 ;;
             *)
