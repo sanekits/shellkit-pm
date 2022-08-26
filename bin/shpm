@@ -34,6 +34,14 @@ stub() {
     done
     echo " >>> " >&2
 }
+# Defines bpoint():
+_DEBUG_=0
+[[ $_DEBUG_  -eq 1 ]] && {
+    echo "_DEBUG_ enabled, sourceMeRun.taskrc is loading." >&2
+    [[ -f ~/bin/sourceMeRun.taskrc ]] && source ~/bin/sourceMeRun.taskrc
+} || {
+    bpoint() { : ;}  # no-op to prevent errant parse failures
+}
 
 unimplemented() {
     echo "Unimplemented feature: $*" >&2
@@ -97,23 +105,16 @@ config() {
     cat "${cfgPath}"
 }
 
-config-prop() {
-    local _f=config-prop
-    _query_package "$@" || die "$_f.1"
-}
-
 list() {
-    #local cfgPath=$(_find_config)
-    #[[ -n $cfgPath ]] || die 101
-    while read kitname _; do
-        local detect_result="$(_detect_package ${kitname})" 2>/dev/null
+    for kitname in $(_query_package --package-names); do
+        local detect_result="$(_query_package --detect ${kitname})"
         echo -n "${kitname} "
         [[ -n $detect_result ]] && { echo "$detect_result"; } || { echo " --> not installed"; }
         (
-            _query_package ${kitname}.desc ${kitname} canon-source
+            _query_package ${kitname}.desc ${kitname}.canon-source
         ) | command sed 's/^/   /'
-    #done < <( command grep -Eo '^[-_a-z0-9]+\s' ${cfgPath} | command uniq ; )
-    done < <( _query_package --package-names )
+    done
+    true
 }
 
 install() {
@@ -154,6 +155,7 @@ parseArgs() {
                 #help List package catalog with installation status
                 shift
                 list "$@"
+                exit
                 ;;
             config)
                 shift
@@ -162,7 +164,7 @@ parseArgs() {
                 ;;
             config-prop)
                 shift
-                config-prop "$@"
+                _query_package "$@"
                 exit
                 ;;
             *)
