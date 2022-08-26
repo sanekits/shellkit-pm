@@ -4,18 +4,20 @@
 
 METADATA_SCHEMA_VERSION=1.0.0
 
-get_meta() {
-    cat <<EOF
-METADATA_SCHEMA_VERSION=${METADATA_SCHEMA_VERSION}
-scriptName=${scriptName}
-dbDirname=$(_find_config)
-EOF
-}
 
 # Defines bpoint():
 [[ -n $DEBUG_SHELLKIT ]] && {
     echo "DEBUG_SHELLKIT enabled, sourceMeRun.taskrc is loading." >&2
     [[ -f ~/bin/sourceMeRun.taskrc ]] && source ~/bin/sourceMeRun.taskrc
+}
+
+get_meta() {
+    cat <<EOF
+METADATA_SCHEMA_VERSION=${METADATA_SCHEMA_VERSION}
+scriptName=${scriptName}
+dbDirname=$(_find_config)
+metafiles=$( __metafiles "$(_find_config)" )
+EOF
 }
 
 do_help() {
@@ -87,6 +89,16 @@ _find_config() {
     echo "ERROR: Can't find metadata in: ${searchList[@]}" >&2
 }
 
+__metafiles() {
+    # Print the metafiles in precedence order
+    local metaroot="$1"
+    (
+        builtin cd $metaroot \
+           && command ls packages packages.[0-9][0-9][0-9] 2>/dev/null \
+            | command sort | command tr '\n' ' '
+    )
+}
+
 _resolve_metadata() {
     # Create a temp dir which maps the aggregate metadata to a dir/file tree:
     # 1. Each package name becomes a subdir of [tmp]/
@@ -104,7 +116,7 @@ _resolve_metadata() {
     [[ -d $metaRoot ]] || die $_f.2
     local tmpRoot=$(command mktemp --tmpdir -d shpm-meta.XXXXXX)
     [[ -d $tmpRoot ]] || die $_f.3
-    local meta_file_list=$( command ls ${metaRoot}/packages ${metaRoot}/packages.??? 2>/dev/null | sort )
+    local meta_file_list=$( __metafiles "${tmpRoot}" )
     (
         # Populate tmpRoot:
         builtin cd $tmpRoot || die $_f.33
@@ -185,7 +197,6 @@ _run_query_function() {
     # Then:
     #   - Wrap the caller's function in setup+teardown logic, as this is
     #     common to all query processing.
-    #bpoint "$@"
     local inner_func="$1"
     shift
     local tmpDb=$(_resolve_metadata)
@@ -215,8 +226,7 @@ _query_package_properties() {
 _get_package_names() {
     # Print all package names
     __list_packages() {
-        #bpoint "$@"
-        ls -d *
+        command ls -d *
     }
     _run_query_function __list_packages
 }
@@ -252,7 +262,6 @@ main() {
 }
 
 [[ -z ${sourceMe} ]] && {
-    #stub "$scriptBase $@"
     main "$@"
     builtin exit
 }
