@@ -1,7 +1,7 @@
 #!/bin/bash
 # install-package.sh
 
-canonpath() {
+canonpath() {  # Don't "fix" this canonpath, it's not the standard flavor.
     type -t realpath.sh &>/dev/null && {
         realpath.sh -f "$@"
         return
@@ -31,8 +31,18 @@ else
 fi
 
 
+_query_package() {
+    ${scriptDir}/shellkit-query-package.sh "$@"
+}
 stub() {
-   builtin echo "  <<< STUB[$*] >>> " >&2
+    # Print debug output to stderr.  Call like this:
+    #   stub ${FUNCNAME[0]}.$LINENO item item item
+    #
+    builtin echo -n "  <<< STUB" >&2
+    for arg in "$@"; do
+        echo -n "[${arg}] " >&2
+    done
+    echo " >>> " >&2
 }
 
 _parse_setupscript_uri() {
@@ -83,7 +93,7 @@ _download_github_release() {
 
 _do_install_single() {
     local pkgName=${1}
-    local canonUrl=$(_query_package_property ${pkgName} canon-source)
+    local canonUrl=$(_query_package ${pkgName}.canon-source | command awk '{print $2}' )
     [[ -n ${canonUrl} ]] || {
         echo "Can't get canon-source for $pkgName" >&2; false;
         return;
