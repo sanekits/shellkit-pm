@@ -2,26 +2,37 @@
 # shpm : Main command for shellkit-pm
 
 canonpath() {
-    type -t realpath.sh &>/dev/null && {
+    builtin type -t realpath.sh &>/dev/null && {
         realpath.sh -f "$@"
         return
     }
-    # Ok for rough work only.  Prefer realpath.sh if it's on the path.
-    ( cd -L -- "$(dirname -- $0)"; echo "$(pwd -P)/$(basename -- $0)" )
+    builtin type -t readlink &>/dev/null && {
+        command readlink -f "$@"
+        return
+    }
+    # Fallback: Ok for rough work only, does not handle some corner cases:
+    ( builtin cd -L -- "$(command dirname -- $0)"; builtin echo "$(command pwd -P)/$(command basename -- $0)" )
 }
 
 [[ -z ${scriptName} ]] && scriptName="$(canonpath $0)"
 [[ -z ${scriptDir} ]] && scriptDir=$(command dirname -- "${scriptName}")
+scriptBase=$(command basename -- ${scriptName})
+
 
 die() {
     builtin echo "ERROR: $*" >&2
     builtin exit 1
 }
 
-
-
 stub() {
-   builtin echo "  <<< STUB[$*] >>> " >&2
+    # Print debug output to stderr.  Call like this:
+    #   stub ${FUNCNAME[0]}.$LINENO item item item
+    #
+    builtin echo -n "  <<< STUB" >&2
+    for arg in "$@"; do
+        echo -n "[${arg}] " >&2
+    done
+    echo " >>> " >&2
 }
 
 unimplemented() {
@@ -132,14 +143,6 @@ parseArgs() {
                 shift
                 install "$@"
                 exit
-                ;;
-            uninstall)
-                shift
-                unimplemented "$*"
-                ;;
-            update)
-                shift
-                unimplemented "$*"
                 ;;
             status)
                 #help Print status of [package [package...]]
