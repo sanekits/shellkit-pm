@@ -68,7 +68,11 @@ die() {
 }
 
 stub() {
-   builtin echo "  <<< STUB[$*] >>> " >&2
+   builtin echo -n "  <<< STUB" >&2
+   for arg in "$@"; do
+       echo -n "[${arg}] " >&2
+   done
+   echo " >>> " >&2
 }
 
 _find_config() {
@@ -91,10 +95,10 @@ _find_config() {
 
 __metafiles() {
     # Print the metafiles in precedence order
+    #stub __metafiles .98 "$@"
     local metaroot="$1"
     (
-        builtin cd $metaroot \
-           && command ls packages packages.[0-9][0-9][0-9] 2>/dev/null \
+           command ls ${metaroot}/packages ${metaroot}/packages.[0-9][0-9][0-9] 2>/dev/null \
             | command sort | command tr '\n' ' '
     )
 }
@@ -114,10 +118,13 @@ _resolve_metadata() {
     local _f=_resolve_metadata
     local metaRoot=$(_find_config)
     [[ -d $metaRoot ]] || die $_f.2
+    #stub  $_f $LINENO $metaRoot "$@"
     local tmpRoot=$(command mktemp --tmpdir -d shpm-meta.XXXXXX)
     [[ -d $tmpRoot ]] || die $_f.3
-    local meta_file_list=$( __metafiles "${tmpRoot}" )
-    (
+    local meta_file_list=$( __metafiles "${metaRoot}" )
+    #stub $_f $LINENO  $tmpRoot  "${meta_file_list}"
+    [[ -n "${meta_file_list[*]}" ]] && (
+
         # Populate tmpRoot:
         builtin cd $tmpRoot || die $_f.33
         rawProps() {
@@ -133,10 +140,12 @@ _resolve_metadata() {
         | command uniq \
         | command xargs mkdir
 
+
         # Create files for each property:
         while read pkg_name record_type value; do
             builtin echo "$value" > ${pkg_name}/${record_type}
         done < <(rawProps)
+        #stub $_f $LINENO $(find)
 
     ) >&2
     echo "${tmpRoot}"
@@ -197,13 +206,16 @@ _run_query_function() {
     # Then:
     #   - Wrap the caller's function in setup+teardown logic, as this is
     #     common to all query processing.
+    local _f=_run_query_function
     local inner_func="$1"
     shift
     local tmpDb=$(_resolve_metadata)
     (
+        #stub $_f $LINENO "$@ / ${tmpDb} ${inner_func}"
         ok=true
         [[ -n $tmpDb ]] || die $_f.201
-        builtin cd ${tmpDb} || die $_f.202
+        builtin cd "${tmpDb}" || die $_f.202
+        #bpoint "$@"
         $inner_func "$@" || ok=false
         builtin cd - &>/dev/null
         command rm -rf ${tmpDb} &>/dev/null
@@ -226,7 +238,8 @@ _query_package_properties() {
 _get_package_names() {
     # Print all package names
     __list_packages() {
-        command ls -d *
+        #stub __list_packages "$@ / $(ls) / $(pwd -P)"
+        command ls -d * 2>/dev/null
     }
     _run_query_function __list_packages
 }
@@ -234,6 +247,7 @@ _get_package_names() {
 main() {
     local _f=main
     local args=()
+    #stub 1
     while [[ -n $1 ]]; do
         case $1 in
             -h|--help)
