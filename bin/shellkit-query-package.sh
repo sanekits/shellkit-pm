@@ -212,6 +212,15 @@ _query_package_properties() {
     #
 }
 
+_get_package_names() {
+    # Print all package names
+    __list_packages() {
+        #bpoint "$@"
+        ls -d *
+    }
+    _run_query_function __list_packages
+}
+
 main() {
     local _f=main
     local args=()
@@ -229,7 +238,7 @@ main() {
                 ;;
             --package-names)
                 shift
-                get_package_names "$@"
+                _get_package_names "$@"
                 exit
                 ;;
             *)
