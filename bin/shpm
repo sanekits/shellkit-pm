@@ -129,14 +129,14 @@ install() {
 
 parseArgs() {
     [[ -z $1 ]] && {
-        shellkit-pm-help "${scriptName}"
+        shellkit-pm-help.sh "${scriptName}"
         exit
     }
     while [[ -n $1 ]]; do
         case $1 in
             --help)
                 shift
-                shellkit-pm-help "${scriptName}"
+                shellkit-pm-help.sh "${scriptName}"
                 exit
                 ;;
             --version)
