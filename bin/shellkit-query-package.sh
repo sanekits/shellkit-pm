@@ -12,6 +12,12 @@ dbDirname=$(_find_config)
 EOF
 }
 
+# Defines bpoint():
+[[ -n DEBUG_SHELLKIT ]] && {
+    echo "DEBUG_SHELLKIT enabled, sourceMeRun.taskrc is loading." >&2
+    [[ -f ~/bin/sourceMeRun.taskrc ]] && source ~/bin/sourceMeRun.taskrc
+}
+
 do_help() {
     local sc="$(basename ${scriptName})"
     cat <<-EOF
@@ -21,6 +27,8 @@ ${sc} --meta
     - Print metadata for packages db
 ${sc} --all
     - Resolve properties by precedence and print all
+${sc} --package-names
+    - Print all package names
 ${sc} <package-name>
     - Print all properties of <package-name>. Fail if not exist
 ${sc} <package-name> <property-name>
@@ -170,6 +178,39 @@ _detect_package() {
     ${detectCmd} 2>/dev/null
 }
 
+_run_query_function() {
+    # When:
+    #   - Caller provides a function which needs to run in a resolved-metadata
+    #     context (i.e. the temp dir constructed by resolving meta files)
+    # Then:
+    #   - Wrap the caller's function in setup+teardown logic, as this is
+    #     common to all query processing.
+    #bpoint "$@"
+    local inner_func="$1"
+    shift
+    local tmpDb=$(_resolve_metadata)
+    (
+        ok=true
+        [[ -n $tmpDb ]] || die $_f.201
+        builtin cd ${tmpDb} || die $_f.202
+        $inner_func "$@" || ok=false
+        builtin cd - &>/dev/null
+        command rm -rf ${tmpDb} &>/dev/null
+        $ok
+    )
+}
+
+_query_package_properties() {
+    # When:
+    #   - A resolved metadata tree is $PWD
+    # Then:
+    #   - Query all properties passed as args
+    for arg in ${args[*]}; do
+        _query_package_property "${arg}"
+        # arg=${arg} PS1="stub-post-query:${arg}> " bash  --norc || die $_f.stub
+    done
+    #
+}
 
 main() {
     local _f=main
@@ -186,23 +227,19 @@ main() {
                 get_meta "$@"
                 exit
                 ;;
+            --package-names)
+                shift
+                get_package_names "$@"
+                exit
+                ;;
             *)
                 args+=($1)
                 ;;
         esac
         shift
     done
-    local tmpDb=$(_resolve_metadata)
-    (
-        [[ -n $tmpDb ]] || die $_f.201
-        builtin cd ${tmpDb} || die $_f.202
-        for arg in ${args[*]}; do
-            _query_package_property "${arg}"
-            # arg=${arg} PS1="stub-post-query:${arg}> " bash  --norc || die $_f.stub
-        done
-        builtin cd - &>/dev/null
-        command rm -rf ${tmpDb} &>/dev/null
-    )
+    _run_query_function _query_package_properties "${args[@]}"
+
 }
 
 [[ -z ${sourceMe} ]] && {
