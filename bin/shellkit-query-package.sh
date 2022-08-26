@@ -13,7 +13,7 @@ EOF
 }
 
 # Defines bpoint():
-[[ -n DEBUG_SHELLKIT ]] && {
+[[ -n $DEBUG_SHELLKIT ]] && {
     echo "DEBUG_SHELLKIT enabled, sourceMeRun.taskrc is loading." >&2
     [[ -f ~/bin/sourceMeRun.taskrc ]] && source ~/bin/sourceMeRun.taskrc
 }
