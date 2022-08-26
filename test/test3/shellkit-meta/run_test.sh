@@ -30,7 +30,8 @@ main() {
     export SHELLKIT_META_DIR=${scriptDir}
     stub "meta: $(${queryScript} --meta | tr '\n' ',' )"
 
-    ${queryScript} ps1-foo.desc gitsmart
+    ${queryScript} --package-names || die
+    ${queryScript} ps1-foo.desc gitsmart || die
 }
 
 [[ -z ${sourceMe} ]] && {
