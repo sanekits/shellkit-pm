@@ -35,7 +35,7 @@ stub() {
     echo " >>> " >&2
 }
 # Defines bpoint():
-_DEBUG_=0
+_DEBUG_=${_DEBUG_:-0}
 [[ $_DEBUG_  -eq 1 ]] && {
     echo "_DEBUG_ enabled, sourceMeRun.taskrc is loading." >&2
     [[ -f ~/bin/sourceMeRun.taskrc ]] && source ~/bin/sourceMeRun.taskrc
@@ -54,23 +54,23 @@ _print_package_status() {
     # When:
     #   $1 = package name
     # Then:
-    #   print [pkg_name] [installed?] [version]  // and return 0 if valid  package name
-    #   print err // and return 1 if not valid package name
+    #   print:
+    #      [pkg_name] INSTALLED [version]
+    #          // ...   and return 0 if valid  package name.
+    #      [pkg_name] not-installed [canon-source value]
+    #          // ... if package is defined but not installed, return 1
+    #      [pkg_name] ERROR...[msg]
+    #          // ... print err and return 2 if undefined package
     local pkgName="$1"
-    _query_package "$pkgName" || return
     echo -n "$pkgName "
-    local detectCmd=$(_query_package "${pkgName}.detect-command")
-    [[ -n $detectCmd ]] || {
-        echo "ERROR: no detect-command property for ${pkgName} in config";
-        false; return;
-    }
-    (
-        ${detectCmd} | tr '\n' ' '
-        [[ ${PIPESTATUS[0]} -eq 0 ]]
-    ) || {
-        echo "   -> Failed detecting ${pkgName}, but this could be installed with \"shpm install ${pkgName}\"" >&2;
-        false;
-        return;
+    read xpath version <<< "$(_query_package --detect ${pkgName})"
+    bpoint $xpath 2>/dev/pts/9
+    [[ -e $xpath ]] && {
+        echo "INSTALLED ${version}"
+        true
+    } || {
+        echo "not-installed";
+        false
     }
 }
 
@@ -84,11 +84,12 @@ status() {
     local result=0
     local index=0
     for pkg_name; do
+        #stub "${FUNCNAME[0]}.${LINENO}" "${pkg_name}"
         echo -n "$(( index++ )) "
         _print_package_status $pkg_name 2>&1  | tr '\n' ' '
-        [[ ${PIPESTATUS[0]} -eq 0 ]] || result=1
         echo
     done
+    #bpoint "$@"
     [[ $result -eq  0 ]]
 }
 
