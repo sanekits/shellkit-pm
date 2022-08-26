@@ -218,6 +218,16 @@ detect_packages() {
     _run_query_function _detect_packages "$@"
 }
 
+get_all() {
+    [[ $1 == inner ]] || {
+        _run_query_function get_all inner
+        return
+    }
+    stub "${FUNCNAME[0]}.${LINENO}" "$@" "get_all start"
+    #bpoint "get_all_start"
+    _query_package_properties $(command find ./* -type f | command sed -e 's%^\./%%' -e 's%/%.%' )
+}
+
 _run_query_function() {
     # When:
     #   - Caller provides a function which needs to run in a resolved-metadata
@@ -246,10 +256,14 @@ _query_package_properties() {
     #   - A resolved metadata tree is $PWD
     # Then:
     #   - Query all properties passed as args
-    for arg in ${args[*]}; do
-        _query_package_property "${arg}"
+    #stub "${FUNCNAME[0]}.${LINENO}" "$@" "start"
+    #bpoint
+    local ok=true
+    for arg ; do
+        #stub "${FUNCNAME[0]}.${LINENO}" "arg:" "$arg"
+        _query_package_property "${arg}" || ok=false
     done
-    #
+    $ok
 }
 
 _get_package_names() {
@@ -273,6 +287,11 @@ main() {
             --meta)
                 shift
                 get_meta "$@"
+                exit
+                ;;
+            --all)
+                shift
+                get_all "$@"
                 exit
                 ;;
             --package-names)
