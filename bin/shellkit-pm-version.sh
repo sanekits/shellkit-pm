@@ -2,7 +2,7 @@
 
 # Running shellkit-pm-version.sh is the correct way to
 # get the home install path for the tool
-KitVersion=0.3.5
+KitVersion=0.4.3
 
 canonpath() {
     # Like "readlink -f", but portable
@@ -14,5 +14,5 @@ Scriptdir=$(dirname -- "$Script")
 
 
 if [ -z "$sourceMe" ]; then
-    printf "%s\t%s\n" ${Scriptdir}/shellkit-pm $KitVersion
+    printf "%s\t%s\n" ${Scriptdir} $KitVersion
 fi

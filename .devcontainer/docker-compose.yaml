@@ -1,0 +1,15 @@
+version: "3.4"
+services:
+  shpm-test:
+    build: .
+    volumes:
+      - ../workspace:/workspace
+      - ${HOME}:/host_home:ro
+      - vdata:/vdata
+      - ${PWD}:/devcontainer:ro
+    container_name: shpm-test
+    init: true
+    command: sleep infinity
+
+volumes:
+  vdata:

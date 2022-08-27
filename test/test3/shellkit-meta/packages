@@ -1,0 +1,26 @@
+# test/test3/shellkit-meta TESTDATA packages
+# schema 1.0.0  -- schema of the packages metadata, this is not the shellkit-pm version
+
+shellkit-pm canon-source https://github.com/sanekits/shellkit-pm
+shellkit-pm desc Package manager for shellkit-based tools
+shellkit-pm detect-command shellkit-pm-version.sh
+
+gitsmart canon-source https://github.com/sanekits/gitsmart
+gitsmart desc Helper utilities and definitions for working with git
+gitsmart detect-command gitsmart-version.sh
+
+ps1-foo canon-source https://github.com/sanekits/ps1-foo
+ps1-foo desc Make bash prompt more helpful+attractive
+ps1-foo detect-command ps1-foo-version.sh
+
+cdpp canon-source https://github.com/sanekits/cdpp
+cdpp desc cd++ smarter change-directory
+cdpp detect-command cdpp-version.sh
+
+localhist canon-source https://github.com/sanekits/localhist
+localhist desc Toolkit for improving bash history
+localhist detect-command localhist-version.sh
+
+taskrc-kit canon-source https://github.com/sanekits/taskrc-kit
+taskrc-kit desc Per-project shell init toolkit
+taskrc-kit detect-command taskrc-kit-version.sh

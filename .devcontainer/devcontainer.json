@@ -1,0 +1,25 @@
+{
+	"name": "shpm tool development",
+
+	"dockerComposeFile": [
+		"docker-compose.yaml"
+	],
+
+	"service": "shpm-test",
+	"workspaceFolder": "/workspace",
+
+    // Note that intellisense can complain here about mounts and be wrong!
+    "mounts": [ "source=${localEnv:HOME},target=/host_home,type=bind,readonly" ],
+
+
+	"extensions": [
+	],
+
+    "initializeCommand": [
+    ],
+
+	"postStartCommand": [
+    ],
+    "shutdownAction": "none"
+
+}
