@@ -42,6 +42,11 @@ main() {
     export SHELLKIT_META_DIR=${scriptDir}
     rm -rf ~/.local/bin/hello-shellkit* || :
     ${shpmScript} install hello-shellkit || die $_f
+    (
+        PS1=">" source ~/.bashrc
+        hello-shellkit-semaphore || die "$_f.$LINENO hello-shellkit-semaphore() fails"
+        echo "hello-shellkit-semaphore(): OK"
+    ) || die
 
     ${queryScript} --package-names || die $_f --package-names
     ${queryScript} ps1-foo.desc gitsmart || die $_f qq
