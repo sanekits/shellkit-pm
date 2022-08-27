@@ -3,3 +3,7 @@
 
 gitsmart canon-source https://github.com/testsite/gitsmart
 gitsmart desc Test description for gitsmart
+
+hello-shellkit canon-source https://github.com/sanekits/hello-shellkit
+hello-shellkit desc Hello world project
+hello-shellkit detect-command hello-shellkit-version.sh

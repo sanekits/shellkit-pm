@@ -4,12 +4,15 @@
 
 METADATA_SCHEMA_VERSION=1.0.0
 
-
 # Defines bpoint():
-[[ -n $DEBUG_SHELLKIT ]] && {
-    echo "DEBUG_SHELLKIT enabled, sourceMeRun.taskrc is loading." >&2
+_DEBUG_=${_DEBUG_:-0}
+[[ $_DEBUG_ -eq 1 ]] && {
+    echo "_DEBUG_ enabled, sourceMeRun.taskrc is loading." >&2
     [[ -f ~/bin/sourceMeRun.taskrc ]] && source ~/bin/sourceMeRun.taskrc
+} || {
+    bpoint() { : ;} # no-op
 }
+
 
 get_meta() {
     cat <<EOF
