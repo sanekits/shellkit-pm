@@ -64,7 +64,6 @@ _print_package_status() {
     local pkgName="$1"
     echo -n "$pkgName "
     read xpath version <<< "$(_query_package --detect ${pkgName})"
-    bpoint $xpath 2>/dev/pts/9
     [[ -e $xpath ]] && {
         echo "INSTALLED ${version}"
         true
@@ -84,12 +83,10 @@ status() {
     local result=0
     local index=0
     for pkg_name; do
-        #stub "${FUNCNAME[0]}.${LINENO}" "${pkg_name}"
         echo -n "$(( index++ )) "
         _print_package_status $pkg_name 2>&1  | tr '\n' ' '
         echo
     done
-    #bpoint "$@"
     [[ $result -eq  0 ]]
 }
 

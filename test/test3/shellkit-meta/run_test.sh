@@ -38,10 +38,7 @@ die() {
 main() {
     local _f=$scriptName.main
     export SHELLKIT_META_DIR=${scriptDir}
-    stub "${FUNCNAME[0]}.${LINENO}" "$@" "${scriptBase} startup"
 
-
-    set -x
     ${queryScript} --package-names || die $_f --package-names
     ${queryScript} ps1-foo.desc gitsmart || die $_f qq
 }
