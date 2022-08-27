@@ -223,8 +223,6 @@ get_all() {
         _run_query_function get_all inner
         return
     }
-    stub "${FUNCNAME[0]}.${LINENO}" "$@" "get_all start"
-    #bpoint "get_all_start"
     _query_package_properties $(command find ./* -type f | command sed -e 's%^\./%%' -e 's%/%.%' )
 }
 
@@ -243,7 +241,6 @@ _run_query_function() {
         ok=true
         [[ -n $tmpDb ]] || die $_f.201
         builtin cd "${tmpDb}" || die $_f.202
-        #bpoint "$@"
         $inner_func "$@" || ok=false
         builtin cd - &>/dev/null
         command rm -rf ${tmpDb} &>/dev/null
@@ -256,11 +253,8 @@ _query_package_properties() {
     #   - A resolved metadata tree is $PWD
     # Then:
     #   - Query all properties passed as args
-    #stub "${FUNCNAME[0]}.${LINENO}" "$@" "start"
-    #bpoint
     local ok=true
     for arg ; do
-        #stub "${FUNCNAME[0]}.${LINENO}" "arg:" "$arg"
         _query_package_property "${arg}" || ok=false
     done
     $ok
