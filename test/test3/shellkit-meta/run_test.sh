@@ -29,6 +29,7 @@ stub() {
 }
 
 queryScript=$(canonpath ${scriptDir}/../../../bin/shellkit-query-package.sh)
+shpmScript=$(canonpath ${scriptDir}/../../../bin/shpm)
 
 die() {
     builtin echo "ERROR($(basename ${scriptName})): $*" >&2
@@ -37,10 +38,14 @@ die() {
 
 main() {
     local _f=$scriptName.main
+
     export SHELLKIT_META_DIR=${scriptDir}
+    rm -rf ~/.local/bin/hello-shellkit* || :
+    ${shpmScript} install hello-shellkit || die $_f
 
     ${queryScript} --package-names || die $_f --package-names
     ${queryScript} ps1-foo.desc gitsmart || die $_f qq
+
 }
 
 [[ -z ${sourceMe} ]] && {
