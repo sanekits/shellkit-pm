@@ -27,14 +27,13 @@ stub() {
 }
 main() {
     [[ -d ../shellkit-meta ]] || die "../shellkit-meta/ dir not found"
-    [[ -d ${HOME}/downloads ]] || die main.1
+    destFolder=$(builtin cd ./tmp && pwd -P)
     (
         builtin cd ../shellkit-meta
         command make pre-publish || die main.0.1
-        command cp ./packages ${HOME}/downloads/ || die main.0.2
-        command touch ${HOME}/downloads/packages
+        command cp ./packages ${destFolder} || die main.0.2
     ) || die main.0
-    command cp bin/shellkit-bootstrap.sh ${HOME}/downloads || die main.1
+    command cp bin/shellkit-bootstrap.sh ${destFolder} || die main.1
     command touch ${HOME}/downloads/shellkit-bootstrap.sh
 }
 
