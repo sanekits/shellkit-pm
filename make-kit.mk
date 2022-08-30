@@ -14,7 +14,7 @@ kit_depends := \
 	bin/shellkit-pm-help \
 	bin/shellkit-bootstrap.sh \
 
-.PHONY:  shellkit-meta shellkit-meta-setup code
+.PHONY:  publish shellkit-meta code
 
 apply_version_extra_files:= bin/shellkit-bootstrap.sh
 version_depends=${apply_version_extra_files}
@@ -23,8 +23,7 @@ publish_extra_files:=bin/shellkit-bootstrap.sh
 shellkit-meta: ../shellkit-meta/packages ../shellkit-meta/Makefile
 	./shellkit-meta-pre-publish.sh
 
-publish: pre-publish
-	make publish-common shellkit-meta release-draft-upload release-list
+publish: pre-publish shellkit-meta publish-common release-draft-upload release-list
 	@echo ">>>> publish complete OK.  <<<"
 	@echo ">>>> Manually publish the release from this URL when satisfied, <<<<"
 	@echo ">>>> and then change ./version to avoid accidental confusion. <<<<"
