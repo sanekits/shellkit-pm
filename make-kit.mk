@@ -18,7 +18,7 @@ kit_depends := \
 
 apply_version_extra_files:= bin/shellkit-bootstrap.sh
 version_depends=${apply_version_extra_files}
-publish_extra_files:=bin/shellkit-bootstrap.sh
+publish_extra_files:=bin/shellkit-bootstrap.sh ../shellkit-meta/packages
 
 shellkit-meta: ../shellkit-meta/packages ../shellkit-meta/Makefile
 	./shellkit-meta-pre-publish.sh
