@@ -1,4 +1,4 @@
-# make-kit.mk.template for <kit-name>
+# make-kit.mk.template for shellkit-pm
 #  This makefile is included by the root shellkit Makefile
 #  It defines values that are kit-specific.
 #  You should edit it and keep it source-controlled.
