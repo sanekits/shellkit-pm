@@ -16,7 +16,7 @@ kit_depends := \
 
 .PHONY:  publish shellkit-meta code
 
-apply_version_extra_files:= bin/shellkit-bootstrap.sh
+apply_version_extra_files:= bin/shellkit-bootstrap.sh README.md
 version_depends=${apply_version_extra_files}
 publish_extra_files:=bin/shellkit-bootstrap.sh ../shellkit-meta/packages
 
