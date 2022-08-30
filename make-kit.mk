@@ -23,9 +23,13 @@ publish_extra_files:=bin/shellkit-bootstrap.sh
 shellkit-meta: ../shellkit-meta/packages ../shellkit-meta/Makefile
 	./shellkit-meta-pre-publish.sh
 
-publish: publish-common shellkit-meta ${HOME}/downloads push-tag
-	@echo "MANUAL STEP:  ~/downloads/packages and ~/downloads/shellkit-bootstrap.sh should be attached to release artifacts"
-	@echo publish complete OK
+publish: pre-publish
+	make publish-common shellkit-meta release-draft-upload
+	gh release list | sort -n
+	@echo ">>>> publish complete OK.  <<<"
+	@echo ">>>> Manually publish the release from this URL when satisfied, <<<<"
+	@echo ">>>> and then change ./version to avoid accidental confusion. <<<<"
+	cat tmp/draft-url
 
 code:
 	code .vscode/shellkit-pm.code-workspace
