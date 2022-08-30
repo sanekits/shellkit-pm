@@ -24,8 +24,7 @@ shellkit-meta: ../shellkit-meta/packages ../shellkit-meta/Makefile
 	./shellkit-meta-pre-publish.sh
 
 publish: pre-publish
-	make publish-common shellkit-meta release-draft-upload
-	gh release list | sort -n
+	make publish-common shellkit-meta release-draft-upload release-list
 	@echo ">>>> publish complete OK.  <<<"
 	@echo ">>>> Manually publish the release from this URL when satisfied, <<<<"
 	@echo ">>>> and then change ./version to avoid accidental confusion. <<<<"
