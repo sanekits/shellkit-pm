@@ -1,4 +1,4 @@
-# make-kit.mk.template for <kit-name>
+# make-kit.mk.template for shellkit-pm
 #  This makefile is included by the root shellkit Makefile
 #  It defines values that are kit-specific.
 #  You should edit it and keep it source-controlled.
@@ -14,18 +14,20 @@ kit_depends := \
 	bin/shellkit-pm-help \
 	bin/shellkit-bootstrap.sh \
 
-.PHONY:  shellkit-meta shellkit-meta-setup code
+.PHONY:  publish shellkit-meta code
 
-apply_version_extra_files:= bin/shellkit-bootstrap.sh
+apply_version_extra_files:= bin/shellkit-bootstrap.sh README.md
 version_depends=${apply_version_extra_files}
-publish_extra_files:=bin/shellkit-bootstrap.sh
+publish_extra_files:=bin/shellkit-bootstrap.sh ../shellkit-meta/packages
 
 shellkit-meta: ../shellkit-meta/packages ../shellkit-meta/Makefile
 	./shellkit-meta-pre-publish.sh
 
-publish: publish-common shellkit-meta ${HOME}/downloads push-tag
-	@echo "MANUAL STEP:  ~/downloads/packages and ~/downloads/shellkit-bootstrap.sh should be attached to release artifacts"
-	@echo publish complete OK
+publish: pre-publish shellkit-meta publish-common release-draft-upload release-list
+	@echo ">>>> publish complete OK.  <<<"
+	@echo ">>>> Manually publish the release from this URL when satisfied, <<<<"
+	@echo ">>>> and then change ./version to avoid accidental confusion. <<<<"
+	cat tmp/draft-url
 
 code:
 	code .vscode/shellkit-pm.code-workspace

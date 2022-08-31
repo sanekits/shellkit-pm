@@ -21,14 +21,16 @@ die() {
 # Final ugly hack imposed by canonpath needs:  depending on the twisting dependencies around
 # realpath.sh, which may or may not be installed, we have to probe twice to find shpm under
 # some conditions:
-if [[ -f ${scriptDir}/shpm ]]; then
-    sourceMe=1 source  ${scriptDir}/shpm || die "Can't source shpm from install-package.sh(1)"
-elif [[ -f ${scriptDir}/shellkit-pm/shpm ]]; then
-    scriptDir=${scriptDir}/shellkit-pm
-    sourceMe=1 source  ${scriptDir}/shpm || die "Can't source shpm from install-package.sh(2)"
-else
-    die "Can't find shpm from install-package.sh [$scriptDir]"
-fi
+[[ -z $sourceMe ]] && {
+    if [[ -f ${scriptDir}/shpm ]]; then
+        sourceMe=1 source  ${scriptDir}/shpm || die "Can't source shpm from install-package.sh(1)"
+    elif [[ -f ${scriptDir}/shellkit-pm/shpm ]]; then
+        scriptDir=${scriptDir}/shellkit-pm
+        sourceMe=1 source  ${scriptDir}/shpm || die "Can't source shpm from install-package.sh(2)"
+    else
+        die "Can't find shpm from install-package.sh [$scriptDir]"
+    fi
+}
 
 
 _query_package() {
