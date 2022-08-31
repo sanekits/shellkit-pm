@@ -4,4 +4,4 @@
 shpm #help Shellkit package manager: install, list, maintain shellkit-based packages
 shellkit-query-package.sh #help@ $SHELLKIT_HELP_SYMBOL --help
 shellkit-pm-help.sh
-shellkit-bootstrapp.sh # Install shellkit-pm from scratch
+shellkit-bootstrap.sh # Install shellkit-pm from scratch
