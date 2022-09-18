@@ -120,16 +120,11 @@ _download_github_release() {
             stub "${FUNCNAME[0]}.${LINENO}" "$uri" post-parse
             full_url="$(_get_base_url_from_canon_source ${canon_source})${uri}"
             stub "${FUNCNAME[0]}.${LINENO}" $full_url full_url
-            #scriptRelpath=$( command grep -Eo "href=\"/.*${pkgName}.*\.sh\"" ${PWD}/rawpage.html )
-            #[[ -n $scriptRelpath ]] && die "${FUNCNAME[0]}.${LINENO}" bad-script-rel-path
-            #scriptRelpath="${scriptRelpath:6}"
-            #stub "${FUNCNAME[0]}.${LINENO}" "$scriptRelpath"
         } || {
             # Now we've got a url for the expanded-assets chunk: this should end with the coveted actual version number:
             actual_version=$(basename $uri)
             stub "${FUNCNAME[0]}.${LINENO}" $actual_version $uri $canon_source
             command curl $(curl_opts) "$uri" > ${PWD}/expanded-assets.html || return $(die 102.49)
-            #uri="/releases/download/${actual_version}/${pkgName}-setup-${actual_version}.sh"
 
             # Find the path to the setup script within the expanded-assets chunk:
             scriptRelpath=$( command grep -Eo 'href="/[^"]*' ${PWD}/expanded-assets.html | command head -n 1)
