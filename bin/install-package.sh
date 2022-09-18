@@ -39,6 +39,7 @@ _query_package() {
     ${scriptDir}/shellkit-query-package.sh "$@"
 }
 stub() {
+    [[ -n $NoStubs ]] && return
     # Print debug output to stderr.  Call like this:
     #   stub ${FUNCNAME[0]}.$LINENO item item item
     #
@@ -73,6 +74,7 @@ _parse_setupscript_uri() {
                 return $(die "Failed to parse expanded_assets URL from $html_file")
             }
             builtin echo "$tx2"
+            return
             ;;
         *)
             die 209.2
@@ -107,34 +109,40 @@ _download_github_release() {
             echo "Failed to retrieve raw html" >&2; false;
             return;
         }
-        uri=$(_parse_setupscript_uri mode_direct ${pkgName} "$PWD/rawpage.html")
+        # We should be looking for the expanded-assets URL ("mode_indirect")?
+        stub "Trying indirect asset list fetch for ${pkgName}"
+        uri=$(_parse_setupscript_uri mode_indirect ${pkgName} "$PWD/rawpage.html")
         [[ -n $uri ]] || {
-            # Maybe we should be looking for the expanded-assets URL ("mode_indirect")?
-            echo "Trying indirect asset list fetch for ${pkgName}" >&2
-            uri=$(_parse_setupscript_uri mode_indirect ${pkgName} "$PWD/rawpage.html")
-            [[ -n $uri ]] || {
-                return $(die "download failed 102.4 ")
-            }
-            # We got a url for the expanded-assets chunk: this should end with the coveted version number:
-            local actual_version=$(basename $uri)
-            stub "${FUNCNAME[0]}.${LINENO}" $actual_version $uri $canon_source
-            uri="/releases/download/${actual_version}/${pkgName}-setup-${actual_version}.sh"
+            return $(die "download failed 102.4 ")
         }
-        base_url=$( _get_base_url_from_canon_source "${canon_source}" )
-        stub "${FUNCNAME[0]}.${LINENO}" "base-url" "$base_url" "uri" "$uri"
-        full_url="${base_url}${uri}"
+        # Now we've got a url for the expanded-assets chunk: this should end with the coveted actual version number:
+        local actual_version=$(basename $uri)
+        stub "${FUNCNAME[0]}.${LINENO}" $actual_version $uri $canon_source
+        command curl $(curl_opts) "$uri" > ${PWD}/expanded-assets.html || return $(die 102.49)
+        #uri="/releases/download/${actual_version}/${pkgName}-setup-${actual_version}.sh"
+
+        # Find the path to the setup script within the expanded-assets chunk:
+        local scriptRelpath=$( command grep -Eo 'href="/[^"]*' ${PWD}/expanded-assets.html | command head -n 1)
+        [[ -n $scriptRelpath ]] || return $(die "download failed 102.34")
+        scriptRelpath=${scriptRelpath:6} # trim the leading [href="]
+        stub "${FUNCNAME[0]}.${LINENO}" "$scriptRelpath"
+
+        # https://github.com/sanekits/looper/releases/download/0.2.0/looper-setup-0.2.0.sh << Sample final url
+        full_url="$(_get_base_url_from_canon_source ${canon_source})${scriptRelpath}"
         dest_file="${PWD}/${pkgName}-setup-${version}.sh"
+        stub "${FUNCNAME[0]}.${LINENO}" curl-args $full_url $dest_file
         command curl $(curl_opts)  "$full_url" > "${dest_file}"
         [[ $? -eq 0 ]] || return $(die "Failed downloading $full_url")
-        chmod +x "$dest_file"
-        echo "$dest_file"
+        chmod +x "$dest_file" || return $(die ${FUNCNAME[0]}.${LINENO})
         stub "${FUNCNAME[0]}.${LINENO}" "setup script downloaded" "$dest_file"
+        echo "$dest_file"
     )
 }
 
 _do_install_single() {
     local pkgName=${1}
     local canonUrl=$(_query_package ${pkgName}.canon-source | command awk '{print $2}' )
+    stub "${FUNCNAME[0]}.${LINENO}" $pkgName $canonUrl
     [[ -n ${canonUrl} ]] || {
         echo "Can't get canon-source for $pkgName" >&2; false;
         return;
@@ -156,6 +164,9 @@ _do_install_single() {
 }
 
 _do_install() {
+    [[ $# -eq 0 ]] && {
+        die "Expected one or more [package-name] args"
+    }
     local result=true
     for pkgName; do
         _do_install_single ${pkgName} || result=false
@@ -165,6 +176,7 @@ _do_install() {
 
 
 [[ -z ${sourceMe} ]] && {
+    NoStubs=1
     _do_install "$@"
     exit
 }
