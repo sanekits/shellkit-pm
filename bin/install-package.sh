@@ -71,7 +71,8 @@ _parse_setupscript_uri() {
             stub "${FUNCNAME[0]}.${LINENO}" "$@" "mode_indirect"
             local tx2=$(command grep -Eo 'https://.*github.*expanded_assets[^"]*' ${html_file})
             [[ -n $tx2 ]] || {
-                return $(die "Failed to parse expanded_assets URL from $html_file")
+                echo "Can't parse expanded_assets URL from $html_file, fallback to mode_direct" >&2
+                false; return
             }
             builtin echo "$tx2"
             return
@@ -102,6 +103,7 @@ _download_github_release() {
     command which curl &>/dev/null || die "curl is not available on the PATH"
     local tmpdir=$(command mktemp -d)
     (
+        set -u
         cd ${tmpdir} || die "201.3"
         stub "${FUNCNAME[0]}.${LINENO}" "$@" "download-prep"
         command curl $(curl_opts) "${canon_source}/releases/${version}" > rawpage.html
@@ -113,22 +115,31 @@ _download_github_release() {
         stub "Trying indirect asset list fetch for ${pkgName}"
         uri=$(_parse_setupscript_uri mode_indirect ${pkgName} "$PWD/rawpage.html")
         [[ -n $uri ]] || {
-            return $(die "download failed 102.4 ")
+            stub "${FUNCNAME[0]}.${LINENO}" "expanded-assets-fail-branch" "$PWD/rawpage.html" rawpage
+            uri=$(_parse_setupscript_uri mode_direct ${pkgName} "$PWD/rawpage.html")
+            stub "${FUNCNAME[0]}.${LINENO}" "$uri" post-parse
+            full_url="$(_get_base_url_from_canon_source ${canon_source})${uri}"
+            stub "${FUNCNAME[0]}.${LINENO}" $full_url full_url
+            #scriptRelpath=$( command grep -Eo "href=\"/.*${pkgName}.*\.sh\"" ${PWD}/rawpage.html )
+            #[[ -n $scriptRelpath ]] && die "${FUNCNAME[0]}.${LINENO}" bad-script-rel-path
+            #scriptRelpath="${scriptRelpath:6}"
+            #stub "${FUNCNAME[0]}.${LINENO}" "$scriptRelpath"
+        } || {
+            # Now we've got a url for the expanded-assets chunk: this should end with the coveted actual version number:
+            actual_version=$(basename $uri)
+            stub "${FUNCNAME[0]}.${LINENO}" $actual_version $uri $canon_source
+            command curl $(curl_opts) "$uri" > ${PWD}/expanded-assets.html || return $(die 102.49)
+            #uri="/releases/download/${actual_version}/${pkgName}-setup-${actual_version}.sh"
+
+            # Find the path to the setup script within the expanded-assets chunk:
+            scriptRelpath=$( command grep -Eo 'href="/[^"]*' ${PWD}/expanded-assets.html | command head -n 1)
+            [[ -n $scriptRelpath ]] || return $(die "download failed 102.34")
+            scriptRelpath=${scriptRelpath:6} # trim the leading [href="]
+            stub "${FUNCNAME[0]}.${LINENO}" "$scriptRelpath"
+
+            # https://github.com/sanekits/looper/releases/download/0.2.0/looper-setup-0.2.0.sh << Sample final url
+            full_url="$(_get_base_url_from_canon_source ${canon_source})${scriptRelpath}"
         }
-        # Now we've got a url for the expanded-assets chunk: this should end with the coveted actual version number:
-        local actual_version=$(basename $uri)
-        stub "${FUNCNAME[0]}.${LINENO}" $actual_version $uri $canon_source
-        command curl $(curl_opts) "$uri" > ${PWD}/expanded-assets.html || return $(die 102.49)
-        #uri="/releases/download/${actual_version}/${pkgName}-setup-${actual_version}.sh"
-
-        # Find the path to the setup script within the expanded-assets chunk:
-        local scriptRelpath=$( command grep -Eo 'href="/[^"]*' ${PWD}/expanded-assets.html | command head -n 1)
-        [[ -n $scriptRelpath ]] || return $(die "download failed 102.34")
-        scriptRelpath=${scriptRelpath:6} # trim the leading [href="]
-        stub "${FUNCNAME[0]}.${LINENO}" "$scriptRelpath"
-
-        # https://github.com/sanekits/looper/releases/download/0.2.0/looper-setup-0.2.0.sh << Sample final url
-        full_url="$(_get_base_url_from_canon_source ${canon_source})${scriptRelpath}"
         dest_file="${PWD}/${pkgName}-setup-${version}.sh"
         stub "${FUNCNAME[0]}.${LINENO}" curl-args $full_url $dest_file
         command curl $(curl_opts)  "$full_url" > "${dest_file}"
