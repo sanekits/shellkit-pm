@@ -3,7 +3,7 @@ services:
   shpm-test:
     build: .
     volumes:
-      - ../workspace:/workspace
+      - ..:/workspace
       - ${HOME}:/host_home:ro
       - vdata:/vdata
       - ${PWD}:/devcontainer:ro
