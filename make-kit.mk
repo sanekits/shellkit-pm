@@ -29,5 +29,12 @@ publish: pre-publish shellkit-meta publish-common release-draft-upload release-l
 	@echo ">>>> and then change ./version to avoid accidental confusion. <<<<"
 	cat tmp/draft-url
 
+
+.PHONY: show-bootstrap-path
+show-bootstrap-path:
+	@# Used by aggregation build processes to identify the path to our self-extracting output script
+	@echo tmp/$(setup_script)
+
+
 code:
 	code .vscode/shellkit-pm.code-workspace
