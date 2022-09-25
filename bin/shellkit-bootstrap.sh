@@ -74,7 +74,6 @@ main() {
         fi
         command mkdir -p ~/.config/shellkit-meta
         echo
-        set -x
         [[ -f ~/.config/shellkit-meta/packages ]] && {
             command cp ./packages ~/.config/shellkit-meta/packages.proposed || die "Failed copying 'packages' to ~/.config/shellkit-meta/packages.proposed from $PWD"
             echo -e "WARNING: you already have a ~/.config/shellkit-meta/packages file.  I didn't overwrite it, but you'll find 'packages.proposed' in that same directory.  You should compare the two and manually merge the changes that you want, or delete your old 'packages' and re-run ${scriptName}" | fold -s >&2
