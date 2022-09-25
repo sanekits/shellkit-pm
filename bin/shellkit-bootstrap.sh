@@ -2,7 +2,7 @@
 # shellkit-bootstrap.sh:  starting from pure scratch, install current shellkit-meta + shellkit-pm
 #  Provides intro guidance on kit setup
 
-shellkitpm_version=0.5.0  # Initial bootstrap version.  You can always do `shpm install shellkit-pm` to update it
+shellkitpm_version=0.5.1  # Initial bootstrap version.  You can always do `shpm install shellkit-pm` to update it
 
 canonpath() {
     ( cd -L -- "$(command dirname -- ${1})"; echo "$(command pwd -P)/$(command basename -- ${1})" )
