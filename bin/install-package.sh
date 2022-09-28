@@ -129,7 +129,9 @@ _download_github_release() {
             command curl $(curl_opts) "$uri" > ${PWD}/expanded-assets.html || die 102.49
 
             # Find the path to the setup script within the expanded-assets chunk:
-            scriptRelpath=$( command grep -Eo 'href="/[^"]*' ${PWD}/expanded-assets.html | command head -n 1)
+            scriptRelpath=$( command grep -Eo 'href=\"/[^"]*' ${PWD}/expanded-assets.html \
+                |  command grep -E "${pkgName}-setup-[.0-9]+\.sh" \
+                | command head -n 1 )
             [[ -n $scriptRelpath ]] || die "download failed 102.34"
             scriptRelpath=${scriptRelpath:6} # trim the leading [href="]
             stub "${FUNCNAME[0]}.${LINENO}" "$scriptRelpath"
