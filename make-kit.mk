@@ -20,6 +20,10 @@ apply_version_extra_files:= bin/shellkit-bootstrap.sh README.md
 version_depends=${apply_version_extra_files}
 publish_extra_files:=bin/shellkit-bootstrap.sh ../shellkit-meta/packages
 
+# TODO: when all legacy kits are migrated, move this dependency
+# into the main Makefile
+publish-common: conformity-check
+
 shellkit-meta: ../shellkit-meta/packages ../shellkit-meta/Makefile
 	./shellkit-meta-pre-publish.sh
 
