@@ -12,6 +12,8 @@ canonpath() {  # Don't "fix" this canonpath, it's not the standard flavor.
 
 [[ -z $scriptName ]] && scriptName="$(canonpath $0)"
 scriptDir=$(command dirname -- "${scriptName}")
+PS4='\033[0;33m+(${BASH_SOURCE}:${LINENO}):\033[0m ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
+
 
 die() {
     builtin echo "ERROR: $*" >&2
@@ -113,7 +115,7 @@ _do_install_single() {
         }
         return
     fi
-    die "Unimplemented path in _do_install_single"
+    die "Unimplemented path in _do_install_single: can't install from canon source like \"${canonUrl}\""
 }
 
 _do_install() {
