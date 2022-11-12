@@ -2,7 +2,7 @@
 # shellkit-bootstrap.sh:  starting from pure scratch, install current shellkit-meta + shellkit-pm
 #  Provides intro guidance on kit setup
 
-shellkitpm_version=0.4.6  # Initial bootstrap version.  You can always do `shpm install shellkit-pm` to update it
+shellkitpm_version=0.6.0  # Initial bootstrap version.  You can always do `shpm install shellkit-pm` to update it
 
 canonpath() {
     ( cd -L -- "$(command dirname -- ${1})"; echo "$(command pwd -P)/$(command basename -- ${1})" )
@@ -75,8 +75,10 @@ main() {
         command mkdir -p ~/.config/shellkit-meta
         echo
         [[ -f ~/.config/shellkit-meta/packages ]] && {
-            command cp ./packages ~/.config/shellkit-meta/packages.proposed || die "Failed copying 'packages' to ~/.config/shellkit-meta/packages.proposed from $PWD"
-            echo -e "WARNING: you already have a ~/.config/shellkit-meta/packages file.  I didn't overwrite it, but you'll find 'packages.proposed' in that same directory.  You should compare the two and manually merge the changes that you want, or delete your old 'packages' and re-run ${scriptName}" | fold -s >&2
+            command diff ~/.config/shellkit-meta/packages ./packages &>/dev/null || {
+                command cp ./packages ~/.config/shellkit-meta/packages.proposed || die "Failed copying 'packages' to ~/.config/shellkit-meta/packages.proposed from $PWD"
+                echo -e "WARNING: you already have a ~/.config/shellkit-meta/packages file.  I didn't overwrite it, but you'll find 'packages.proposed' in that same directory.  You should compare the two and manually merge the changes that you want, or delete your old 'packages' and re-run ${scriptName}" | fold -s >&2
+            }
         } || {
             command cp ./packages ~/.config/shellkit-meta/packages || die "Failed copying 'packages' to ~/.config/shellkit-meta/ from $PWD"
         }
