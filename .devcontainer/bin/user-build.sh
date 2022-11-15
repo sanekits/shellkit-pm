@@ -19,7 +19,10 @@ vscode_uid=$(sed -n "s/^.*--uid \([0-9]*\).*$/\1/p" <<< "$*")
 [[ -n $vscode_uid ]] || vscode_uid=1000
 
 
-[[ -f /.dockerenv ]] || die "Not running in a Docker container"
+[[ -f /.dockerenv ]] || {
+    grep -sq docker /proc/1/cgroup  || die "Not running in a Docker container"
+}
+
 [[ $UID -eq 0 ]] || die "We're expecting to run as root in a container during image build"
 
 
