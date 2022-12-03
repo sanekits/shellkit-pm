@@ -203,7 +203,9 @@ _do_install_single() {
     [[ -f $fullInstallerPath ]] || \
         die "sorry, but package $pkgName depends on installation extension ${extName}, but I can't find an install-package.sh script where it's expected ( $fullInstallerPath )"
 
-    die "Unimplemented path in _do_install_single: can't install from canon source like \"${canonUrl}\""
+    bash -l -c "$fullInstallerPath --canon-url=${canonUrl}" || {
+        die "Installer extension for ${extName} failed with --canon-url=${canonUrl} [$fullInstallerPath]"
+    }
 }
 
 _do_install() {
