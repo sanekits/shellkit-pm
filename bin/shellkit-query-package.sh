@@ -2,7 +2,7 @@
 # shellkit-query-package.sh:  run queries against packages db
 #
 
-METADATA_SCHEMA_VERSION=1.0.0
+METADATA_SCHEMA_VERSION=1.0.1
 
 # Defines bpoint():
 _DEBUG_=${_DEBUG_:-0}
@@ -20,6 +20,7 @@ METADATA_SCHEMA_VERSION=${METADATA_SCHEMA_VERSION}
 scriptName=${scriptName}
 dbDirname=$(_find_config)
 metafiles=$( __metafiles "$(_find_config)" )
+installExtRoot=$(_find_config)/install-ext.d
 EOF
 }
 
@@ -64,6 +65,7 @@ canonpath() {
 scriptName="$(canonpath "$0")"
 scriptDir=$(command dirname -- "${scriptName}")
 scriptBase=$(basename ${scriptName})
+PS4='\033[0;33m+$?(${BASH_SOURCE}:${LINENO}):\033[0m ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
 
 die() {
     builtin echo "ERROR(${scriptBase}): $*" >&2

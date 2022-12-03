@@ -90,6 +90,19 @@ _get_base_url_from_canon_source() {
     echo "${canon_source}" | command grep -Eo 'http[s]?://[^/]+'
 }
 
+_get_installer_extension_root() {
+    # Installer extensions are expected to create a subdir named after themselves under
+    # [metadata-dir]/install-ext.d/[extension-name].  That's where they put their
+    # helper scripts or whatever they need to accept forwarding calls from shpm
+    #
+    #  The shellkit-query-package --meta invocation prints some key/value pairs that
+    # include installExtRoot: the thing we need to know.
+    local prop=$( ${scriptDir}/shellkit-query-package.sh --meta | command grep -sE '^installExtRoot='  )
+    local result
+    IFS=$'='; read _ result <<< "$prop"; unset IFS
+    echo $result
+}
+
 curl_opts() {
     echo "-L"
     [[ -n $https_proxy ]] && echo " -k"
@@ -154,6 +167,7 @@ _download_github_release() {
 }
 
 _do_install_single() {
+    set -x
     local pkgName=${1}
     local canonUrl=$(_query_package ${pkgName}.canon-source | command awk '{print $2}' )
     stub "${FUNCNAME[0]}.${LINENO}" $pkgName $canonUrl
@@ -174,6 +188,22 @@ _do_install_single() {
         }
         return
     fi
+    # If the package is not in github, we don't know how to install it.  But the canon-source
+    # can yield the name of the installer extension that will accept the install arguments
+    # and take over:
+    local installExtRoot=$(_get_installer_extension_root)
+    [[ -n $installExtRoot ]] || \
+        die "Can't identify installer extension root: 1"
+    local extName
+    IFS=$':' ; read extName _ <<< "${canonUrl}"; unset IFS
+    [[ -n $extName ]] || \
+        die "Can't identify installer extension name: 2"
+    [[ -d $installExtRoot ]] || \
+        die "Can't find installer extension root dir: $installExtRoot"
+    local fullInstallerPath="${installExtRoot}/${extName}/install-package.sh"
+    [[ -f $fullInstallerPath ]] || \
+        die "sorry, but package $pkgName depends on installation extension ${extName}, but I can't find an install-package.sh script where it's expected ( $fullInstallerPath )"
+
     die "Unimplemented path in _do_install_single: can't install from canon source like \"${canonUrl}\""
 }
 

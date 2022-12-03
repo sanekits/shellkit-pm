@@ -2,7 +2,7 @@
 # shellkit-bootstrap.sh:  starting from pure scratch, install current shellkit-meta + shellkit-pm
 #  Provides intro guidance on kit setup
 
-shellkitpm_version=0.6.2  # Initial bootstrap version.  You can always do `shpm install shellkit-pm` to update it
+shellkitpm_version=0.6.3  # Initial bootstrap version.  You can always do `shpm install shellkit-pm` to update it
 
 canonpath() {
     ( cd -L -- "$(command dirname -- ${1})"; echo "$(command pwd -P)/$(command basename -- ${1})" )
@@ -10,6 +10,7 @@ canonpath() {
 
 [[ -n $scriptName ]] || scriptName=$(canonpath $0)
 scriptDir=$(dirname -- ${scriptName})
+PS4='\033[0;33m+$?(${BASH_SOURCE}:${LINENO}):\033[0m ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
 
 [[ -n ${host_base} ]] || host_base=https://github.com/sanekits
 
