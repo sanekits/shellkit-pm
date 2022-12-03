@@ -167,7 +167,6 @@ _download_github_release() {
 }
 
 _do_install_single() {
-    set -x
     local pkgName=${1}
     local canonUrl=$(_query_package ${pkgName}.canon-source | command awk '{print $2}' )
     stub "${FUNCNAME[0]}.${LINENO}" $pkgName $canonUrl
