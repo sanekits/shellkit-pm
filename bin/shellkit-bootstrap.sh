@@ -2,7 +2,7 @@
 # shellkit-bootstrap.sh:  starting from pure scratch, install current shellkit-meta + shellkit-pm
 #  Provides intro guidance on kit setup
 
-shellkitpm_version=0.6.7  # Initial bootstrap version.  You can always do `shpm install shellkit-pm` to update it
+shellkitpm_version=0.6.8  # Initial bootstrap version.  You can always do `shpm install shellkit-pm` to update it
 
 canonpath() {
     ( cd -L -- "$(command dirname -- ${1})"; echo "$(command pwd -P)/$(command basename -- ${1})" )
@@ -51,7 +51,6 @@ main() {
     (
         cd $tmpDir || die "Can't cd to ${tmpDir}"
         setup_script=shellkit-pm-setup-${shellkitpm_version}.sh
-        set -x
         command curl $(curl_opts) "$pm_download_url" > ${setup_script} || die "Failed downloading $pm_download_url"
         command grep -Eq 'using Makeself' ${setup_script} || die "Bad setup script content in ${setup_script}"
         echo "OK: $pm_download_url"
