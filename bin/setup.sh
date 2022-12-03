@@ -24,7 +24,6 @@ main() {
     cd ${HOME}/.local/bin || die 208
     # TODO: kit-specific steps can be added here
 
-    set -x
     mkdir -p ${HOME}/.config/shellkit-meta
     touch ${HOME}/.config/shellkit-meta/packages
     # Installer extensions: we must init the extensions hook dir so that

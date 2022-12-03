@@ -2,7 +2,7 @@
 # shellkit-bootstrap.sh:  starting from pure scratch, install current shellkit-meta + shellkit-pm
 #  Provides intro guidance on kit setup
 
-shellkitpm_version=0.6.4  # Initial bootstrap version.  You can always do `shpm install shellkit-pm` to update it
+shellkitpm_version=0.6.5  # Initial bootstrap version.  You can always do `shpm install shellkit-pm` to update it
 
 canonpath() {
     ( cd -L -- "$(command dirname -- ${1})"; echo "$(command pwd -P)/$(command basename -- ${1})" )
@@ -59,7 +59,6 @@ main() {
         command grep -Eq 'canon-source' packages || die "Bad packages content in $PWD/packages"
         echo "OK: $meta_download_url => ${PWD}/packages"
 
-        set +x
         curPmVersion=$(command shellkit-pm-version.sh 2>/dev/null | command awk '{print $2}')
         [[ -z $curPmVersion ]] && {
             # Elaborately build a version string that "make apply-version"
