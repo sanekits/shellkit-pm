@@ -171,6 +171,14 @@ _do_install_single() {
     local canonUrl=$(_query_package ${pkgName}.canon-source | command awk '{print $2}' )
     stub "${FUNCNAME[0]}.${LINENO}" $pkgName $canonUrl
     [[ -n ${canonUrl} ]] || {
+        # Could it be a virtual package?
+        local vpack=$( _query_package ${pkgName}.virtual )
+        [[ -n "$vpack" ]] && {
+            local packlist
+            IFS=$' '; read _ packlist <<< "$vpack" ; unset IFS
+            bash -il "$scriptName" $packlist
+            exit
+        }
         echo "Can't get canon-source for $pkgName" >&2; false;
         return;
     }
