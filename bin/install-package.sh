@@ -168,9 +168,17 @@ _download_github_release() {
 
 _do_install_single() {
     local pkgName=${1}
-    local canonUrl=$(_query_package ${pkgName}.canon-source | command awk '{print $2}' )
+    local canonUrl=$(_query_package ${pkgName}.canon-source 2>/dev/null | command awk '{print $2}' )
     stub "${FUNCNAME[0]}.${LINENO}" $pkgName $canonUrl
     [[ -n ${canonUrl} ]] || {
+        # Could it be a virtual package?
+        local vpack=$( _query_package ${pkgName}.virtual )
+        [[ -n "$vpack" ]] && {
+            local packlist
+            IFS=$' '; read _ packlist <<< "$vpack" ; unset IFS
+            bash -il "$scriptName" $packlist
+            exit
+        }
         echo "Can't get canon-source for $pkgName" >&2; false;
         return;
     }
