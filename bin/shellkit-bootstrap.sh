@@ -2,7 +2,7 @@
 # shellkit-bootstrap.sh:  starting from pure scratch, install current shellkit-meta + shellkit-pm
 #  Provides intro guidance on kit setup
 
-shellkitpm_version=0.7.2  # Initial bootstrap version.  You can always do `shpm install shellkit-pm` to update it
+shellkitpm_version=0.8.0  # Initial bootstrap version.  You can always do `shpm install shellkit-pm` to update it
 
 canonpath() {
     ( cd -L -- "$(command dirname -- ${1})"; echo "$(command pwd -P)/$(command basename -- ${1})" )
@@ -72,20 +72,7 @@ main() {
             builtin echo "${setup_script}: OK"
         fi
         command mkdir -p ~/.config/shellkit-meta
-        local overwrite_packages=true
-        echo
-        if [[ -f ~/.config/shellkit-meta/packages ]]; then
-            # A zero-byte packages file will get overwritten.  If it has real content, we'll protect it.
-            if [[ $(stat --printf="%s" ~/.config/shellkit-meta/packages) -gt 0 ]]; then
-                command diff ~/.config/shellkit-meta/packages ./packages &>/dev/null || {
-                    overwrite_packages=false
-                    command cp ./packages ~/.config/shellkit-meta/packages.proposed || die "Failed copying 'packages' to ~/.config/shellkit-meta/packages.proposed from $PWD"
-                    echo -e "WARNING: you already have a ~/.config/shellkit-meta/packages file.  I didn't overwrite it, but you'll find 'packages.proposed' in that same directory.  You should compare the two and manually merge the changes that you want, or delete your old 'packages' and re-run ${scriptName}" | fold -s >&2
-                }
-            fi
-        fi
-        $overwrite_packages && \
-            command cp ./packages ~/.config/shellkit-meta/packages || die "Failed copying 'packages' to ~/.config/shellkit-meta/ from $PWD"
+        command cp ./packages ~/.config/shellkit-meta/packages || die "Failed copying 'packages' to ~/.config/shellkit-meta/ from $PWD"
         echo -e  $'\n' \
             " 1.  Restart your shell with \"bash -l\"" $'\n' \
             " 2.  To see the available packages, run \"shpm list\"" $'\n' \
