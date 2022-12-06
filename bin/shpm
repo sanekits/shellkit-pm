@@ -92,7 +92,7 @@ status() {
 }
 
 _query_package() {
-    ${scriptDir}/shellkit-query-package.sh "$@"
+    ${scriptDir}/shellkit-query-package.sh "$@" 2>/dev/null
 }
 
 _query_property() {
@@ -113,7 +113,20 @@ list() {
     for kitname in $(_query_package --package-names); do
         local detect_result="$(_query_package --detect ${kitname})"
         echo -n "${kitname} "
-        [[ -n $detect_result ]] && { echo "$detect_result"; } || { echo " --> not installed"; }
+        if [[ -n $detect_result ]]; then
+            echo "$detect_result";
+        else
+            # Is it possibly a virtual package?
+            local vpack=$(_query_package "${kitname}.virtual" 2>/dev/null)
+            local vlist
+            IFS=' '; read _ vlist <<< "$vpack"; unset IFS
+            [[ -n $vlist ]] && {
+                echo "(virtual) --> $vlist"
+                continue
+            } || {
+                echo " --> not installed";
+            }
+        fi
         (
             _query_package ${kitname}.desc ${kitname}.canon-source
         ) | command sed 's/^/   /'
