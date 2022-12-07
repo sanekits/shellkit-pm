@@ -105,7 +105,7 @@ _get_installer_extension_root() {
 
 curl_opts() {
     echo "-L"
-    [[ -n $https_proxy ]] && echo " -k"
+    ( [[ -n "$https_proxy" ]] && echo " -k" ) 2>/dev/null
 }
 
 _download_github_release() {
