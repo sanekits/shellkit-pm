@@ -52,6 +52,15 @@ stub() {
     echo " >>> " >&2
 }
 
+_set_local_root() {
+    export ShpmLocalRoot="$1"
+    [[ -n $ShpmLocalRoot ]] || die "Empty arg in _set_local_root"
+    [[ -d $ShpmLocalRoot ]] || {
+        echo "WARNING: ShpmLocalRoot=$ShpmLocalRoot, not a real dir"
+    }
+    true
+}
+
 _parse_setupscript_uri() {
     local mode="$1"
     local pkgName="$2"
@@ -168,6 +177,20 @@ _download_github_release() {
 
 _do_install_single() {
     local pkgName=${1}
+    local install_source
+    if [[ -n $ShpmLocalRoot ]]; then
+        [[ -x ${ShpmLocalRoot}/${pkgName}/setup.sh ]] && {
+            install_source=${ShpmLocalRoot}/${pkgName}/setup.sh
+            echo "Local source is $install_source"
+            ${install_source} || {
+                echo "Failed to install ${install_source}"; false
+                return
+            }
+            return
+        } || {
+            echo "No local-root source for $pkgName" >&2
+        }
+    fi
     local canonUrl=$(_query_package ${pkgName}.canon-source 2>/dev/null | command awk '{print $2}' )
     stub "${FUNCNAME[0]}.${LINENO}" $pkgName $canonUrl
     [[ -n ${canonUrl} ]] || {
@@ -182,7 +205,6 @@ _do_install_single() {
         echo "Can't get canon-source for $pkgName" >&2; false;
         return;
     }
-    local install_source
     if [[ "${canonUrl}" =~ .*github.com.* ]]; then
         local install_source=$(_download_github_release "${pkgName}" "${canonUrl}" latest)
         [[ -n $install_source ]] || {
@@ -195,7 +217,7 @@ _do_install_single() {
         }
         return
     fi
-    # If the package is not in github, we don't know how to install it.  But the canon-source
+    # If the package is not in ShpmLocalRoot, and not in github, we don't know how to install it.  But the canon-source
     # can yield the name of the installer extension that will accept the install arguments
     # and take over:
     local installExtRoot=$(_get_installer_extension_root)
@@ -220,8 +242,17 @@ _do_install() {
     [[ $# -eq 0 ]] && {
         die "Expected one or more [package-name] args"
     }
+    local packages=()
+    while [[ -n $1 ]]; do
+        case $1 in
+            -l|--local-root) _set_local_root "$2"; shift ;;
+            -*|--*) die "Unknown option: $1" ;;
+            *) packages+=($1) ;;
+        esac
+        shift
+    done
     local result=true
-    for pkgName; do
+    for pkgName in "${packages[@]}"; do
         _do_install_single ${pkgName} || result=false
     done
     $result

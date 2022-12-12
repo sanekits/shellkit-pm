@@ -157,7 +157,7 @@ parseArgs() {
                 exit
                 ;;
             install)
-                #help Install [package [package...]]
+                #help Install [package [package...]] < --local-root dirname >
                 shift
                 install "$@"
                 exit
