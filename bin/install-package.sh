@@ -200,7 +200,7 @@ _do_install_single() {
             local packlist
             IFS=$' '; read _ packlist <<< "$vpack" ; unset IFS
             bash -il "$scriptName" $packlist
-            exit
+            return
         }
         echo "Can't get canon-source for $pkgName" >&2; false;
         return;
