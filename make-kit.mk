@@ -25,12 +25,9 @@ publish-common: conformity-check
 shellkit-meta: ../shellkit-meta/packages ../shellkit-meta/Makefile
 	./shellkit-meta-pre-publish.sh
 
-publish: pre-publish shellkit-meta publish-common release-draft-upload release-list
-	@echo ">>>> publish complete OK.  <<<"
-	@echo ">>>> Manually publish the release from this URL when satisfied, <<<<"
-	@echo ">>>> and then change ./version to avoid accidental confusion. <<<<"
+publish: pre-publish shellkit-meta publish-common release-upload release-list
 	cat tmp/draft-url
-
+	@echo ">>>> publish complete OK. (FINAL)  <<<"
 
 .PHONY: show-bootstrap-path
 show-bootstrap-path:
