@@ -4,8 +4,8 @@ shellkit-pm-semaphore() {
     [[ 1 -eq  1 ]]
 }
 
-do-hello() {
-    # TODO: This is a test function.  You can discard it.
-    hello.sh
-}
+alias shpm-query='shellkit-query-package.sh'
+
+[[ -f ${HOME}/.local/bin/shellkit-pm/shpm-completion.bashrc ]] \
+    && source ${HOME}/.local/bin/shellkit-pm/shpm-completion.bashrc
 

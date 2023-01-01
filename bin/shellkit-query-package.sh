@@ -39,6 +39,8 @@ ${sc} <package-name>
     - Print all properties of <package-name>. Fail if not exist
 ${sc} <package-name> <property-name>
     - Print given property of package.  Fail if not exist.
+${sc} --detect <package-name> ...
+    - Run the detection command for package(s) and print result.
 
 --- Package db search precedence: ---
   ( First directory found ends search )
