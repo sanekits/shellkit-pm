@@ -113,7 +113,7 @@ _get_installer_extension_root() {
 }
 
 curl_opts() {
-    echo "-L"
+    echo "-L -k"
     ( [[ -n "$https_proxy" ]] && echo " -k" ) 2>/dev/null
     command curl --help | grep -sq '\-\-progress\-bar' \
         && echo " --progress-bar"
