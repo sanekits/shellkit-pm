@@ -34,6 +34,7 @@ main() {
         command cp ./packages ${destFolder} || die main.0.2
     ) || die main.0
     command cp bin/shellkit-bootstrap.sh ${destFolder} || die main.1
+    command mkdir -p ${HOME}/downloads || die main.1.2
     command touch ${HOME}/downloads/shellkit-bootstrap.sh || die main.1.1
 }
 
