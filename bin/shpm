@@ -1,52 +1,37 @@
 #!/bin/bash
 # shpm : Main command for shellkit-pm
 
-canonpath() {
-    builtin type -t realpath.sh &>/dev/null && {
-        realpath.sh -f "$@"
-        return
+{
+    
+    canonpath() {
+        builtin type -t realpath.sh &>/dev/null && {
+            realpath.sh -f "$@"
+            return
+        }
+        builtin type -t readlink &>/dev/null && {
+            command readlink -f "$@"
+            return
+        }
+        # Fallback: Ok for rough work only, does not handle some corner cases:
+        ( builtin cd -L -- "$(command dirname -- "$0")" || exit; builtin echo "$(command pwd -P)/$(command basename -- "$0")" )
     }
-    builtin type -t readlink &>/dev/null && {
-        command readlink -f "$@"
-        return
+
+    [[ -z ${scriptName} ]] && scriptName="$(canonpath "$0")"
+    [[ -z ${scriptDir} ]] && scriptDir=$(command dirname -- "${scriptName}")
+    #declare scriptBase;scriptBase="$(command basename -- "${scriptName}")"
+    #shellcheck disable=2154
+    PS4='$( _0=$?; exec 2>/dev/null; realpath -- "${BASH_SOURCE[0]:-?}:${LINENO} ^$_0 ${FUNCNAME[0]:-?}()=>" ) '
+
+
+    die() {
+        builtin echo "ERROR: $*" >&2
+        builtin exit 1
     }
-    # Fallback: Ok for rough work only, does not handle some corner cases:
-    ( builtin cd -L -- "$(command dirname -- $0)"; builtin echo "$(command pwd -P)/$(command basename -- $0)" )
-}
+    unimplemented() {
+        echo "Unimplemented feature: $*" >&2
+        exit 1
+    }
 
-[[ -z ${scriptName} ]] && scriptName="$(canonpath $0)"
-[[ -z ${scriptDir} ]] && scriptDir=$(command dirname -- "${scriptName}")
-scriptBase=$(command basename -- ${scriptName})
-PS4='\033[0;33m+$?(${BASH_SOURCE}:${LINENO}):\033[0m ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
-
-
-die() {
-    builtin echo "ERROR: $*" >&2
-    builtin exit 1
-}
-
-stub() {
-    # Print debug output to stderr.  Call like this:
-    #   stub ${FUNCNAME[0]}.$LINENO item item item
-    #
-    builtin echo -n "  <<< STUB" >&2
-    for arg in "$@"; do
-        echo -n "[${arg}] " >&2
-    done
-    echo " >>> " >&2
-}
-# Defines bpoint():
-_DEBUG_=${_DEBUG_:-0}
-[[ $_DEBUG_  -eq 1 ]] && {
-    echo "_DEBUG_ enabled, sourceMeRun.taskrc is loading." >&2
-    [[ -f ~/bin/sourceMeRun.taskrc ]] && source ~/bin/sourceMeRun.taskrc
-} || {
-    bpoint() { : ;}  # no-op to prevent errant parse failures
-}
-
-unimplemented() {
-    echo "Unimplemented feature: $*" >&2
-    exit 1
 }
 
 
@@ -64,14 +49,14 @@ _print_package_status() {
     #          // ... print err and return 2 if undefined package
     local pkgName="$1"
     echo -n "$pkgName "
-    read xpath version <<< "$(_query_package --detect ${pkgName})"
-    [[ -e $xpath ]] && {
+    read -r xpath version <<< "$(_query_package --detect "${pkgName}")"
+    if [[ -e $xpath ]]; then
         echo "INSTALLED ${version}"
         true
-    } || {
-        echo "not-installed $(_query_property ${pkgName}.canon-source)";
+    else
+        echo "not-installed $(_query_property "${pkgName}.canon-source")";
         false
-    }
+    fi
 }
 
 status() {
@@ -85,14 +70,14 @@ status() {
     local index=0
     for pkg_name; do
         echo -n "$(( index++ )) "
-        _print_package_status $pkg_name 2>&1  | tr '\n' ' '
+        _print_package_status "$pkg_name" 2>&1  | tr '\n' ' '
         echo
     done
     [[ $result -eq  0 ]]
 }
 
 _query_package() {
-    ${scriptDir}/shellkit-query-package.sh "$@" 2>/dev/null
+    "${scriptDir}/shellkit-query-package.sh" "$@" 2>/dev/null
 }
 
 _query_property() {
@@ -101,7 +86,7 @@ _query_property() {
 }
 
 config() {
-    local cfgPath=$(_find_config)
+    local cfgPath;cfgPath=$(_find_config)
     [[ -n $cfgPath ]] || die 101
     echo "# Config-found: ${cfgPath}"
     echo "# Content of packages metadata follows:"
@@ -111,31 +96,31 @@ config() {
 
 list() {
     for kitname in $(_query_package --package-names); do
-        local detect_result="$(_query_package --detect ${kitname})"
+        local detect_result;detect_result="$(_query_package --detect "${kitname}")"
         echo -n "${kitname} "
         if [[ -n $detect_result ]]; then
             echo "$detect_result";
         else
             # Is it possibly a virtual package?
-            local vpack=$(_query_package "${kitname}.virtual" 2>/dev/null)
+            local vpack; vpack=$(_query_package "${kitname}.virtual" 2>/dev/null)
             local vlist
-            IFS=' '; read _ vlist <<< "$vpack"; unset IFS
-            [[ -n $vlist ]] && {
+            IFS=' '; read -r _ vlist <<< "$vpack"; unset IFS
+            if [[ -n $vlist ]]; then
                 echo "(virtual) --> $vlist"
                 continue
-            } || {
+            else
                 echo " --> not installed";
-            }
+            fi
         fi
         (
-            _query_package ${kitname}.desc ${kitname}.canon-source
+            _query_package "${kitname}.desc" "${kitname}.canon-source"
         ) | command sed 's/^/   /'
     done
     true
 }
 
 install() {
-    ${scriptDir}/install-package.sh "$@"
+    "${scriptDir}/install-package.sh" "$@"
 }
 
 parseArgs() {
@@ -143,53 +128,50 @@ parseArgs() {
         shellkit-pm-help.sh "${scriptName}"
         exit
     }
-    while [[ -n $1 ]]; do
-        case $1 in
-            --help)
-                shift
-                shellkit-pm-help.sh "${scriptName}"
-                exit
-                ;;
-            --version)
-                #help Print version info for shellkit-pm
-                shift
-                shellkit-pm-version.sh "$@"
-                exit
-                ;;
-            install)
-                #help Install [package [package...]] < --local-root dirname >
-                shift
-                install "$@"
-                exit
-                ;;
-            status)
-                #help Print status of [package [package...]]
-                shift
-                status "$@"
-                exit
-                ;;
-            list)
-                #help List package catalog with installation status
-                shift
-                list "$@"
-                exit
-                ;;
-            config)
-                shift
-                config "$@"
-                exit
-                ;;
-            config-prop)
-                shift
-                _query_package "$@"
-                exit
-                ;;
-            *)
-                die "Unknown argument: $1"
-                ;;
-        esac
-        shift
-    done
+    case $1 in
+        --help)
+            shift
+            shellkit-pm-help.sh "${scriptName}"
+            exit
+            ;;
+        --version)
+            #help Print version info for shellkit-pm
+            shift
+            shellkit-pm-version.sh "$@"
+            exit
+            ;;
+        install)
+            #help Install [package [package...]] < --local-root dirname >
+            shift
+            install "$@"
+            exit
+            ;;
+        status)
+            #help Print status of [package [package...]]
+            shift
+            status "$@"
+            exit
+            ;;
+        list)
+            #help List package catalog with installation status
+            shift
+            list "$@"
+            exit
+            ;;
+        config)
+            shift
+            config "$@"
+            exit
+            ;;
+        config-prop)
+            shift
+            _query_package "$@"
+            exit
+            ;;
+        *)
+            die "Unknown argument: $1"
+            ;;
+    esac
 }
 
 main() {
@@ -198,7 +180,6 @@ main() {
 
 [[ -z ${sourceMe} ]] && {
     parseArgs "$@"
-    exit
 }
 
 true
