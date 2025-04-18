@@ -8,11 +8,24 @@
             "name": "shpm",
             "type": "bashdb",
             "request": "launch",
-            "program": "${workspaceFolder}/bin/shpm}",
+            "program": "${workspaceFolder}/bin/shpm",
             "args": [
                 "install",
                 "uptrain"
             ]
+
+        },
+        {
+            "name": "install-package.sh",
+            "type": "bashdb",
+            "request": "launch",
+            "program": "${workspaceFolder}/bin/install-package.sh",
+            "args": [
+                "uptrain"
+            ],
+            "env": {
+                "scriptName":"${workspaceFolder}/bin/install-package.sh"
+            }
 
         }
     ]

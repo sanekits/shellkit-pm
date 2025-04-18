@@ -10,7 +10,7 @@ canonpath() {  # Don't "fix" this canonpath, it's not the standard flavor.
     ( cd -L -- "$(dirname -- $0)"; echo "$(pwd -P)/$(basename -- $0)" )
 }
 
-[[ -z $scriptName ]] && scriptName="$(canonpath $0)"
+scriptName=${scriptName:-$(canonpath "$0")}
 scriptDir=$(command dirname -- "${scriptName}")
 PS4='\033[0;33m+(${BASH_SOURCE}:${LINENO}):\033[0m ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
 
@@ -106,10 +106,12 @@ _get_installer_extension_root() {
     #
     #  The shellkit-query-package --meta invocation prints some key/value pairs that
     # include installExtRoot: the thing we need to know.
-    local prop=$( ${scriptDir}/shellkit-query-package.sh --meta | command grep -sE '^installExtRoot='  )
-    local result
-    IFS=$'='; read _ result <<< "$prop"; unset IFS
-    echo $result
+
+    local result="--unable-to-determine-extension-root-dir"
+    # the --meta arg returns metadata about the package metadata (meta squared?), including
+    # where it's located:
+    IFS=$'='; read -r _ result < <("${scriptDir}/shellkit-query-package.sh" --meta | command grep -sE '^installExtRoot=')
+    echo "$result"
 }
 
 curl_opts() {
@@ -226,7 +228,7 @@ _do_install_single() {
     [[ -n $installExtRoot ]] || \
         die "Can't identify installer extension root: 1"
     local extName
-    IFS=$':' ; read extName _ <<< "${canonUrl}"; unset IFS
+    IFS=$':' ; read -r extName _ <<< "${canonUrl}"; unset IFS
     [[ -n $extName ]] || \
         die "Can't identify installer extension name: 2"
     [[ -d $installExtRoot ]] || \
