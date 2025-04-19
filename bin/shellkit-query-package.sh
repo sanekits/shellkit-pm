@@ -84,6 +84,9 @@ stub() {
 }
 
 _find_config() {
+    if $USE_MAINT_SOURCE; then
+        return
+    fi
     [[ -n ${SHELLKIT_META_DIR} ]] && {
         # User can customize the shellkit package dir with SHELLKIT_META_DIR
         [[ -f "${SHELLKIT_META_DIR}/packages" ]] || { (die "Can't find 'packages' in \$SHELLKIT_META_DIR ($SHELLKIT_META_DIR)"); return $?; }
@@ -136,7 +139,9 @@ _resolve_metadata() {
     #
     local _f=_resolve_metadata
     local metaRoot; metaRoot=$(_find_config)
-    [[ -d "$metaRoot" ]] || die $_f.2
+    if ! $USE_MAINT_SOURCE; then
+        [[ -d "$metaRoot" ]] || die $_f.2
+    fi
     local tmpRoot; tmpRoot=$(command mktemp --tmpdir -d shpm-meta.XXXXXX)
     [[ -d "$tmpRoot" ]] || die $_f.3
     mapfile -t meta_file_list < <( __metafiles "$metaRoot" )
