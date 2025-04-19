@@ -2,6 +2,9 @@
 # shellkit-query-package.sh:  run queries against packages db
 #
 
+#shellcheck disable=2154
+PS4='$( _0=$?; exec 2>/dev/null; realpath -- "${BASH_SOURCE[0]:-?}:${LINENO} ^$_0 ${FUNCNAME[0]:-?}()=>" ) '
+
 METADATA_SCHEMA_VERSION=1.0.1
 
 
@@ -156,13 +159,9 @@ _resolve_metadata() {
 
 
         # Create files for each property:
-        set -x
         IFS=$' \n'; while read -r pkg_name record_type value; do
             builtin echo "$value" > "${pkg_name}/${record_type}"
         done < <(rawProps)
-        set +x
-
-        #  >&2 huh?
     fi
     echo "$tmpRoot"
 }
