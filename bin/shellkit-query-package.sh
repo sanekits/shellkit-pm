@@ -4,14 +4,9 @@
 
 METADATA_SCHEMA_VERSION=1.0.1
 
-# Defines bpoint():
-_DEBUG_=${_DEBUG_:-0}
-[[ $_DEBUG_ -eq 1 ]] && {
-    echo "_DEBUG_ enabled, sourceMeRun.taskrc is loading." >&2
-    [[ -f ~/bin/sourceMeRun.taskrc ]] && source ~/bin/sourceMeRun.taskrc
-} || {
-    bpoint() { : ;} # no-op
-}
+
+USE_MAINT_SOURCE=false  ## --use-maint-source tells us to pull package lists directly from the shellkit maint workspace,
+                        ## e.g. ../shellkit-meta/packages and ../bb-shelkit-meta/packages
 
 
 get_meta() {
@@ -19,13 +14,13 @@ get_meta() {
 METADATA_SCHEMA_VERSION=${METADATA_SCHEMA_VERSION}
 scriptName=${scriptName}
 dbDirname=$(_find_config)
-metafiles=$( __metafiles "$(_find_config)" )
+metafiles=$( __metafiles "$(_find_config)" | tr '\n' ' ' )
 installExtRoot=$(_find_config)/install-ext.d
 EOF
 }
 
 do_help() {
-    local sc="$(basename ${scriptName})"
+    local sc;sc="$(basename "${scriptName}")"
     cat <<-EOF
 --- Command examples: ---
 ${sc} --help
@@ -61,12 +56,12 @@ canonpath() {
         return
     }
     # Fallback: Ok for rough work only, does not handle some corner cases:
-    ( builtin cd -L -- "$(command dirname -- $0)"; builtin echo "$(command pwd -P)/$(command basename -- $0)" )
+    ( builtin cd -L -- "$(command dirname -- "$0")" || exit; builtin echo "$(command pwd -P)/$(command basename -- "$0")" )
 }
 
-scriptName="$(canonpath "$0")"
-scriptDir=$(command dirname -- "${scriptName}")
-scriptBase=$(basename ${scriptName})
+scriptName="${scriptName:-$(canonpath "$0")}"
+scriptBase=$(basename "$scriptName")
+scriptDir="$(dirname "${scriptName}")"
 PS4='\033[0;33m+$?(${BASH_SOURCE}:${LINENO}):\033[0m ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
 
 die() {
@@ -88,28 +83,40 @@ stub() {
 _find_config() {
     [[ -n ${SHELLKIT_META_DIR} ]] && {
         # User can customize the shellkit package dir with SHELLKIT_META_DIR
-        [[ -f ${SHELLKIT_META_DIR}/packages ]] || die "Can't find 'packages' in \$SHELLKIT_META_DIR ($SHELLKIT_META_DIR)"
-        echo ${SHELLKIT_META_DIR}
+        [[ -f "${SHELLKIT_META_DIR}/packages" ]] || { (die "Can't find 'packages' in \$SHELLKIT_META_DIR ($SHELLKIT_META_DIR)"); return $?; }
+        echo "${SHELLKIT_META_DIR}"
         return
     }
-    local searchList=("~/.config/shellkit-meta" "/etc/shellkit-meta" "/test_dir")
+    local searchList=("$HOME/.config/shellkit-meta" "/etc/shellkit-meta" "/test_dir")
     for path in "${searchList[@]}"; do
         path=$(eval "echo $path")
         [[ -f "${path}/packages" ]] && {
-            echo "$(canonpath ${path})"
+            canonpath "$path"
             return
         }
     done
-    echo "ERROR: Can't find metadata in: ${searchList[@]}" >&2
+    echo "ERROR: Can't find metadata in: ${searchList[*]}" >&2
 }
 
 __metafiles() {
-    # Print the metafiles in precedence order
-    local metaroot="$1"
-    (
-           command ls ${metaroot}/packages ${metaroot}/packages.[0-9][0-9][0-9] 2>/dev/null \
-            | command sort | command tr '\n' ' '
-    )
+    if $USE_MAINT_SOURCE; then
+        # Only used during dev maintenance operations
+        builtin cd "$scriptDir" || exit 92
+        local ShellkitWorkspace;ShellkitWorkspace="$(dirname "$(readlink -f "$( command ls -1 ../{,../{,../{,../}}}.shellkit-workspace 2>/dev/null )")")"
+        [[ -d $ShellkitWorkspace ]] || die "\$USE_MAINT_SOURCE is set, but can't find .shellkit-workspace markerfile in parent tree"
+        (
+            builtin cd "$ShellkitWorkspace" || exit 91
+            # shellcheck disable=2046 
+            readlink -f shellkit-meta/packages bb-shellkit-meta/packages
+        )
+    else
+        # Primary path: print the metafiles in precedence order
+        local metaroot="$1"
+        (
+            command ls "${metaroot}"/packages "${metaroot}"/packages.[0-9][0-9][0-9] 2>/dev/null \
+                | command sort 
+        )
+    fi
 }
 
 _resolve_metadata() {
@@ -125,18 +132,18 @@ _resolve_metadata() {
     # - Caller is responsible for cleanup of this tree
     #
     local _f=_resolve_metadata
-    local metaRoot=$(_find_config)
-    [[ -d $metaRoot ]] || die $_f.2
-    local tmpRoot=$(command mktemp --tmpdir -d shpm-meta.XXXXXX)
-    [[ -d $tmpRoot ]] || die $_f.3
-    local meta_file_list=$( __metafiles "${metaRoot}" )
-    [[ -n "${meta_file_list[*]}" ]] && (
+    local metaRoot; metaRoot=$(_find_config)
+    [[ -d "$metaRoot" ]] || die $_f.2
+    local tmpRoot; tmpRoot=$(command mktemp --tmpdir -d shpm-meta.XXXXXX)
+    [[ -d "$tmpRoot" ]] || die $_f.3
+    mapfile -t meta_file_list < <( __metafiles "$metaRoot" )
+    if [[ -n "${meta_file_list[*]}" ]]; then
 
         # Populate tmpRoot:
-        builtin cd $tmpRoot || die $_f.33
+        builtin cd "$tmpRoot" || die $_f.33
         rawProps() {
             # Print all properties, stripping comments and blanks:
-            command cat ${meta_file_list[*]}  \
+            command cat "${meta_file_list[@]}"  \
             | command grep -vE '(^$)|(^\s*#)'
         }
 
@@ -149,12 +156,15 @@ _resolve_metadata() {
 
 
         # Create files for each property:
-        while read pkg_name record_type value; do
-            builtin echo "$value" > ${pkg_name}/${record_type}
+        set -x
+        IFS=$' \n'; while read -r pkg_name record_type value; do
+            builtin echo "$value" > "${pkg_name}/${record_type}"
         done < <(rawProps)
+        set +x
 
-    ) >&2
-    echo "${tmpRoot}"
+        #  >&2 huh?
+    fi
+    echo "$tmpRoot"
 }
 
 _query_package_property() {
@@ -175,39 +185,39 @@ _query_package_property() {
     #  - print "<no-property:$1> to stderr if property not valid, return non-zero
     #
     local _f=_query_package_property
-    [[ -n $1 ]] || return $(die No arg in $_f.1)
+    [[ -n "$1" ]] || { (die "No arg in $_f.1"); return $?; }
     local packageName recordType
 
-    IFS="." read packageName recordType <<< "$1"
-    [[ -n ${recordType} ]] && {
+    IFS="." read -r packageName recordType <<< "$1"
+    if [[ -n ${recordType} ]];then
         builtin echo -n "${packageName}.${recordType} "
         command cat "${packageName}/${recordType}" 2>/dev/null || {
-            return $(die "$1 not defined")
+            (die "$1 not defined"); return $?;
         }
         return
-    } || {
+    else
         # No record-type, so just test for package name validity:
-        [[ -n ${packageName} ]] || return $(die "No package-name passed to $_f")
-        [[ -d ${packageName} ]] || return $(die "Unknown package: ${packageName}")
+        [[ -n ${packageName} ]] || { (die "No package-name passed to $_f"); return $?; }
+        [[ -d ${packageName} ]] || { (die "Unknown package: ${packageName}"); return $?; }
         # Print all properties:
-        for file in ${packageName}/*; do
+        for file in "${packageName}"/*; do
             builtin echo -n "$file " \
                 | command tr '/' '.'
-            command cat $file 2>/dev/null
+            command cat "$file" 2>/dev/null
         done
         return
-    }
+    fi
 }
 
 _get_property_value() {
-    local key val
-    read key val <<< $(_query_package_property "$1")
+    local val
+    read -r _ val <<< "$(_query_package_property "$1")"
     echo "$val"
 }
 
 _detect_package() {
     local pkgName="$1"
-    local detectCmd=$(_get_property_value "${pkgName}.detect-command")
+    local detectCmd; detectCmd=$(_get_property_value "${pkgName}.detect-command")
     [[ -n ${detectCmd} ]] || return
     ${detectCmd} 2>/dev/null
     res=$?
@@ -230,7 +240,7 @@ get_all() {
         _run_query_function get_all inner
         return
     }
-    _query_package_properties $(command find ./* -type f | command sed -e 's%^\./%%' -e 's%/%.%' )
+    _query_package_properties "$(command find ./* -type f | command sed -e 's%^\./%%' -e 's%/%.%')"
 }
 
 _run_query_function() {
@@ -243,14 +253,14 @@ _run_query_function() {
     local _f=_run_query_function
     local inner_func="$1"
     shift
-    local tmpDb=$(_resolve_metadata)
+    local tmpDb; tmpDb=$(_resolve_metadata)
     (
         ok=true
-        [[ -n $tmpDb ]] || die $_f.201
-        builtin cd "${tmpDb}" || die $_f.202
+        [[ -n "$tmpDb" ]] || { (die "$_f.201"); return $?; }
+        builtin cd "$tmpDb" || { (die "$_f.202"); return $?; }
         $inner_func "$@" || ok=false
-        builtin cd - &>/dev/null
-        command rm -rf ${tmpDb} &>/dev/null
+        builtin cd - &>/dev/null || exit
+        command rm -rf "$tmpDb" &>/dev/null
         $ok
     )
 }
@@ -270,7 +280,8 @@ _query_package_properties() {
 _get_package_names() {
     # Print all package names
     __list_packages() {
-        command ls -d * 2>/dev/null
+        #shellcheck disable=2317
+        command ls -d ./* 2>/dev/null | cut -c 3-
     }
     _run_query_function __list_packages
 }
@@ -284,6 +295,9 @@ main() {
                 shift
                 do_help "$@"
                 exit
+                ;;
+            --use-maint-source)
+                USE_MAINT_SOURCE=true
                 ;;
             --meta)
                 shift
@@ -306,7 +320,7 @@ main() {
                 exit
                 ;;
             *)
-                args+=($1)
+                args+=("$1")
                 ;;
         esac
         shift

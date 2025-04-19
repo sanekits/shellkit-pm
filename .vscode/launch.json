@@ -5,6 +5,17 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "shellkit-query-package.sh",
+            "type": "bashdb",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "program": "${workspaceFolder}/bin/shellkit-query-package.sh",
+            "args": [
+                "--use-maint-source",
+                "--package-names"
+            ]
+        },
+        {
             "name": "shpm",
             "type": "bashdb",
             "request": "launch",
