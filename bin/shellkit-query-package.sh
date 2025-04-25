@@ -72,16 +72,6 @@ die() {
     builtin exit 1
 }
 
-stub() {
-    # Print debug output to stderr.  Call like this:
-    #   stub ${FUNCNAME[0]}.$LINENO item item item
-    #
-    builtin echo -n "  <<< STUB" >&2
-    for arg in "$@"; do
-        echo -n "[${arg}] " >&2
-    done
-    echo " >>> " >&2
-}
 
 _find_config() {
     if $USE_MAINT_SOURCE; then
@@ -157,14 +147,14 @@ _resolve_metadata() {
 
         # Build dirs for each package:
         (
-            rawProps | command awk '{print $1}'  # Just package names please
+            rawProps | command awk -F '[. ]' '{print $1}'  # Just package names please
         )  | command sort \
         | command uniq \
         | command xargs mkdir
 
 
         # Create files for each property:
-        IFS=$' \n'; while read -r pkg_name record_type value; do
+        IFS=$'. \n'; while read -r pkg_name record_type value; do
             builtin echo "$value" > "${pkg_name}/${record_type}"
         done < <(rawProps)
     fi
@@ -284,6 +274,8 @@ _query_package_properties() {
 _get_package_names() {
     # Print all package names
     __list_packages() {
+        # This is executed by _run_query_function in a resolved metadata context
+        # (i.e. a dir constructed from resolving metadata in ~/.config/shellkit-data)
         #shellcheck disable=2317
         command ls -d ./* 2>/dev/null | cut -c 3-
     }
