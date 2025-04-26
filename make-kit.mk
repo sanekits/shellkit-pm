@@ -1,6 +1,5 @@
 # make-kit.mk.template for shellkit-pm
 make-kit.mk: ;
-
 #  This makefile is included by the root shellkit Makefile
 #  It defines values that are kit-specific.
 #  You should edit it and keep it source-controlled.
@@ -10,7 +9,7 @@ make-kit.mk: ;
 # zap all templates/* containing 'ShellkitTemplateVers' constants and changes to the corresponding dependent kits
 # Note that within templates/* there may be diverse versions in upstream shellkit, they don't all have to match,
 # but the derived copies should be sync'ed with upstream as needed.
-ShellkitTemplateVers=2
+ShellkitTemplateVers=3
 
 # TODO: update kit_depends to include anything which
 #   might require the kit version to change as seen
@@ -37,6 +36,7 @@ shellkit-meta: ../shellkit-meta/packages ../shellkit-meta/Makefile
 publish: pre-publish shellkit-meta publish-common release-upload release-list
 	cat tmp/draft-url
 	@echo ">>>> publish complete OK. (FINAL)  <<<"
+
 publish-draft: pre-publish publish-common release-draft-upload release-list
 	cat tmp/draft-url
 	@echo ">>>> publish complete OK. (DRAFT - you must manually publish it from github release page)  <<<"
