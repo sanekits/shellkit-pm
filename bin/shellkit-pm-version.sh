@@ -2,7 +2,7 @@
 
 # Running shellkit-pm-version.sh is the correct way to
 # get the home install path for the tool
-KitVersion=1.0.2
+KitVersion=1.0.3
 readonly KitVersion
 
 # The shellkit/ tooling naturally evolves out from under the dependent kits.  ShellkitSetupVers allows
